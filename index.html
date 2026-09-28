@@ -1,0 +1,4597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>John Tromp's Lambda Diagrams - Minimalist Workstation</title>
+  <style>
+    :root {
+      --bg-base: #000000;
+      --bg-panel: #0a0a0a;
+      --bg-subpanel: #141414;
+      --bg-input: #050505;
+      --border: #262626;
+      --border-light: #404040;
+      --text: #ffffff;
+      --text-muted: #a3a3a3;
+      --text-dim: #737373;
+      --accent: #ffffff;
+      --accent-inv: #000000;
+      --redex-border: #ffffff;
+      --canvas-bg: #000000;
+      --grid-dot: #1a1a1a;
+      --font-code: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, Monaco, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg-base: #f5f5f5;
+      --bg-panel: #ffffff;
+      --bg-subpanel: #eaeaea;
+      --bg-input: #ffffff;
+      --border: #d4d4d4;
+      --border-light: #a3a3a3;
+      --text: #0a0a0a;
+      --text-muted: #525252;
+      --text-dim: #8c8c8c;
+      --accent: #000000;
+      --accent-inv: #ffffff;
+      --redex-border: #000000;
+      --canvas-bg: #ffffff;
+      --grid-dot: #e5e5e5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Fallback for non-webkit browsers (e.g. Firefox) without triggering Chromium Windows buttons */
+    @supports not selector(::-webkit-scrollbar) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-light) transparent;
+      }
+    }
+
+    /* Custom Long-Cylinder Scrollbar (Strictly No Up/Down/Left/Right Buttons) */
+    ::-webkit-scrollbar {
+      width: 6px !important;
+      height: 6px !important;
+    }
+
+    ::-webkit-scrollbar-button,
+    ::-webkit-scrollbar-button:single-button,
+    ::-webkit-scrollbar-button:vertical:decrement,
+    ::-webkit-scrollbar-button:vertical:increment,
+    ::-webkit-scrollbar-button:horizontal:decrement,
+    ::-webkit-scrollbar-button:horizontal:increment,
+    ::-webkit-scrollbar-button:start,
+    ::-webkit-scrollbar-button:end {
+      display: none !important;
+      width: 0px !important;
+      height: 0px !important;
+      background: transparent !important;
+      border: none !important;
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-track-piece {
+      background: transparent !important;
+      border: none !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-light) !important;
+      border-radius: 9999px !important;
+      border: none !important;
+      min-height: 40px !important;
+      background-clip: padding-box;
+      transition: background-color 0.15s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted) !important;
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent !important;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-subpanel);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-code);
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .brand-titles h1 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-tag {
+      font-size: 10px;
+      background: var(--bg-subpanel);
+      color: var(--text-muted);
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .brand-titles p {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Minimalist Buttons */
+    .btn {
+      background: var(--bg-subpanel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--border);
+      border-color: var(--border-light);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-solid {
+      background: var(--text);
+      color: var(--accent-inv);
+      border-color: var(--text);
+    }
+
+    .btn-solid:hover {
+      background: var(--text-muted);
+      border-color: var(--text-muted);
+      color: var(--accent-inv);
+    }
+
+    .btn-active {
+      background: var(--text) !important;
+      color: var(--accent-inv) !important;
+      border-color: var(--text) !important;
+    }
+
+    select.ui-select {
+      background: var(--bg-subpanel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    select.ui-select:focus {
+      border-color: var(--border-light);
+    }
+
+    /* Workspace Layout */
+    .workspace-layout {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 51px);
+      overflow: hidden;
+    }
+
+    /* Sidebar Panel */
+    .sidebar-panel {
+      width: 440px;
+      min-width: 360px;
+      max-width: 520px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-card {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-row {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Mode Tabs */
+    .segmented-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg-base);
+      padding: 2px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .segmented-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 3px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .segmented-tab.active {
+      background: var(--bg-subpanel);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .expr-textarea {
+      width: 100%;
+      height: 70px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-code);
+      font-size: 13px;
+      padding: 8px 10px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .expr-textarea:focus {
+      border-color: var(--border-light);
+    }
+
+    .symbol-rack {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .symbol-key {
+      font-family: var(--font-code);
+      font-size: 11px;
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 2px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .symbol-key:hover {
+      background: var(--text);
+      color: var(--accent-inv);
+      border-color: var(--text);
+    }
+
+    /* Stepper Card */
+    .phase-timeline-bar {
+      display: flex;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-base);
+      margin-bottom: 12px;
+    }
+
+    .phase-pill {
+      flex: 1;
+      padding: 6px 2px;
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text-dim);
+      background: transparent;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .phase-pill:last-child {
+      border-right: none;
+    }
+
+    .phase-pill.active {
+      background: var(--text);
+      color: var(--accent-inv);
+      font-weight: 700;
+    }
+
+    .phase-pill.passed {
+      background: var(--bg-subpanel);
+      color: var(--text-muted);
+    }
+
+    .stepper-row-7 {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .stepper-row-7 .btn {
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      border-radius: 4px;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .stepper-row-7 .btn svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+      pointer-events: none;
+    }
+
+    .narrative-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .meta-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .meta-control-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--text);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border);
+      background: var(--bg-subpanel);
+      color: var(--text-muted);
+    }
+
+    .status-active {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    /* Synchronized Code Inspector */
+    .code-inspector-wrap {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px;
+      font-family: var(--font-code);
+      font-size: 13px;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-x: auto;
+    }
+
+    .code-inspector-wrap .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+      display: block;
+      font-family: var(--font-sans);
+    }
+
+    .syntax-token {
+      border-radius: 2px;
+      padding: 0 1px;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .syntax-token.highlight-scope {
+      background: var(--border-light);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .syntax-token.highlight-redex {
+      border-bottom: 2px solid var(--text);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .syntax-token.highlight-target-var {
+      background: var(--border-light);
+      border-bottom: 1px dashed var(--text);
+      font-weight: 700;
+    }
+
+    .syntax-token.highlight-arg {
+      background: var(--border);
+      font-weight: 600;
+    }
+
+    /* Compact Step History Table */
+    .history-table-wrap {
+      flex: 1;
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-base);
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .history-table thead {
+      position: sticky;
+      top: 0;
+      background: var(--bg-panel);
+      z-index: 2;
+    }
+
+    .history-table th {
+      padding: 5px 8px;
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-table tbody tr {
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.1s ease;
+    }
+
+    .history-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .history-table tbody tr:hover {
+      background: var(--bg-subpanel);
+    }
+
+    .history-table tbody tr.active {
+      background: var(--bg-subpanel);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .history-table tbody tr.active td:first-child {
+      border-left: 3px solid var(--text);
+    }
+
+    .history-table td {
+      padding: 5px 8px;
+      font-size: 11px;
+      font-family: var(--font-sans);
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-table td.col-term {
+      font-family: var(--font-code);
+      color: var(--text);
+    }
+
+    /* Canvas Viewport */
+    .canvas-viewport-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas-bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .canvas-top-bar {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .view-tabs-group {
+      display: inline-flex;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px;
+    }
+
+    .view-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .view-tab.active {
+      background: var(--bg-subpanel);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .svg-canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .svg-canvas-container:active {
+      cursor: grabbing;
+    }
+
+    svg.main-diagram-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Monospace Card View */
+    .mono-view-container {
+      display: none;
+      flex: 1;
+      padding: 24px;
+      overflow: auto;
+      background: var(--canvas-bg);
+    }
+
+    .mono-card {
+      font-family: var(--font-code);
+      font-size: 14px;
+      line-height: 1.25;
+      color: var(--text);
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px 20px;
+      display: inline-block;
+      min-width: 320px;
+      user-select: text;
+    }
+
+    /* SVG Diagram Geometries - Minimalist Black & White */
+    .diag-abs {
+      stroke-width: 5px;
+      stroke-linecap: square;
+      stroke: var(--text);
+      transition: opacity 0.2s, stroke-width 0.2s;
+    }
+
+    .diag-var {
+      stroke-width: 4px;
+      stroke-linecap: square;
+      stroke: var(--text);
+      transition: opacity 0.2s, stroke-width 0.2s;
+    }
+
+    .diag-app {
+      stroke-width: 4px;
+      stroke-linecap: square;
+      stroke: var(--text);
+      transition: opacity 0.2s, stroke-width 0.2s;
+    }
+
+    /* Redex highlight in monochrome: distinctive outline or inverted beacon */
+    .diag-redex-bridge {
+      stroke-width: 6px !important;
+      stroke: var(--text) !important;
+      stroke-dasharray: 6 3;
+      cursor: pointer;
+      animation: dash-pulse 1s linear infinite;
+    }
+
+    @keyframes dash-pulse {
+      to { stroke-dashoffset: -18; }
+    }
+
+    .diag-target-var {
+      stroke-width: 5.5px !important;
+      stroke-dasharray: 5 2.5;
+    }
+
+    .diag-dissolving {
+      opacity: 0.25 !important;
+      stroke-dasharray: 3 4 !important;
+    }
+
+    .diag-dimmed {
+      opacity: 0.4 !important;
+    }
+
+    .diag-highlighted {
+      stroke-width: 6px !important;
+    }
+
+    .diag-dot {
+      fill: var(--text);
+    }
+
+    .diag-label {
+      font-family: var(--font-code);
+      font-size: 11px;
+      font-weight: 500;
+      fill: var(--text-dim);
+      user-select: none;
+    }
+
+    .receptor-socket {
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 1.5px;
+      stroke-dasharray: 3 2;
+    }
+
+    /* 5-Phase Distinct Visual System */
+    .phase-spotlight-frame {
+      fill: var(--bg-subpanel);
+      fill-opacity: 0.15;
+      stroke: var(--text);
+      stroke-width: 1.5px;
+      stroke-dasharray: 5 3;
+      rx: 4px;
+      animation: frame-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes frame-pulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 0.95; }
+    }
+
+    .phase-arg-box {
+      fill: var(--bg-subpanel);
+      fill-opacity: 0.3;
+      stroke: var(--text);
+      stroke-width: 1.5px;
+      stroke-dasharray: 5 3;
+      rx: 4px;
+    }
+
+    .phase-flow-trace {
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 2px;
+      stroke-dasharray: 4 3;
+      animation: dash-pulse 1s linear infinite;
+    }
+
+    .phase-socket-outer {
+      fill: var(--bg-base);
+      stroke: var(--text);
+      stroke-width: 2px;
+    }
+
+    .phase-socket-inner {
+      fill: var(--text);
+    }
+
+    .phase-docked-block {
+      fill: var(--bg-subpanel);
+      stroke: var(--text);
+      stroke-width: 1.5px;
+      rx: 3px;
+    }
+
+    /* Floating Viewport Toolbar */
+    .floating-viewport-ctrls {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px;
+      display: flex;
+      gap: 3px;
+      z-index: 10;
+    }
+
+    .floating-icon-btn {
+      width: 28px;
+      height: 28px;
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-family: var(--font-code);
+    }
+
+    .floating-icon-btn:hover {
+      background: var(--text);
+      color: var(--accent-inv);
+    }
+
+    /* Tooltip */
+    .interactive-tooltip {
+      position: absolute;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-light);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      pointer-events: none;
+      z-index: 100;
+      display: none;
+      max-width: 280px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .interactive-tooltip .t-head {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      width: 680px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .modal-box-lg {
+      width: 860px;
+      max-width: 94vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preset-filter-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .preset-search-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 12px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    .preset-search-input:focus {
+      border-color: var(--border-light);
+    }
+
+    .preset-category-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .preset-cat-tab {
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .preset-cat-tab:hover {
+      color: var(--text);
+      border-color: var(--border-light);
+    }
+
+    .preset-cat-tab.active {
+      background: var(--text);
+      color: var(--accent-inv);
+      border-color: var(--text);
+      font-weight: 600;
+    }
+
+    .presets-table-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-base);
+      max-height: 52vh;
+    }
+
+    .presets-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .presets-table th {
+      background: var(--bg-panel);
+      color: var(--text-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .preset-row {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .preset-row:hover {
+      background: var(--bg-subpanel);
+    }
+
+    .preset-row:last-child {
+      border-bottom: none;
+    }
+
+    .preset-row td {
+      padding: 8px 12px;
+      vertical-align: middle;
+    }
+
+    .preset-cell-name {
+      font-weight: 600;
+      color: var(--text);
+      font-family: var(--font-code);
+      white-space: nowrap;
+    }
+
+    .preset-cell-code {
+      font-family: var(--font-code);
+      font-size: 11px;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .preset-cell-code code {
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .preset-cell-cat {
+      color: var(--text-dim);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .preset-cell-desc {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .modal-footer-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-top h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .close-modal-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    .close-modal-btn:hover {
+      color: var(--text);
+    }
+
+    .modal-inner {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+
+    .modal-inner h3 {
+      font-size: 14px;
+      margin: 14px 0 6px;
+      color: var(--text);
+    }
+
+    .modal-inner p {
+      margin-bottom: 10px;
+    }
+
+    .modal-inner ul {
+      margin-left: 18px;
+      margin-bottom: 10px;
+    }
+
+    .modal-inner code {
+      font-family: var(--font-code);
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    @media (max-width: 960px) {
+      .workspace-layout {
+        flex-direction: column;
+      }
+      .sidebar-panel {
+        width: 100%;
+        max-width: none;
+        height: 48vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .canvas-viewport-wrap {
+        height: 52vh;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Header -->
+  <header>
+    <div class="brand-wrap">
+      <div class="brand-logo">λ</div>
+      <div class="brand-titles">
+        <h1>
+          <span id="txtBrandTitle">John Tromp Lambda 图动态演算工作台</span>
+          <span class="badge-tag" id="txtBadge">Tromp Diagrams</span>
+        </h1>
+        <p id="txtBrandSub">纯黑白极简电路式几何拓扑 · 五阶段 β-规约动态演示 · 作用域分析器</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <button id="langToggleBtn" class="btn" title="Switch Language / 切换语言">English</button>
+      <button id="themeToggleBtn" class="btn" title="Toggle Theme / 切换主题">浅色模式</button>
+      <button id="guideModalBtn" class="btn">图解指南</button>
+      <button id="aboutModalBtn" class="btn">关于 Tromp</button>
+    </div>
+  </header>
+
+  <!-- Workspace Layout -->
+  <div class="workspace-layout">
+
+    <!-- Left Controls Panel -->
+    <aside class="sidebar-panel">
+
+      <!-- Input Card -->
+      <div class="sidebar-card">
+        <div class="card-header-row">
+          <span id="lblInputSection">表达式输入</span>
+          <span id="syntaxStatus" class="status-badge status-active">就绪</span>
+        </div>
+
+        <div class="segmented-tabs">
+          <button class="segmented-tab active" data-input-mode="classic" id="tabModeClassic">经典记法 (λx.x)</button>
+          <button class="segmented-tab" data-input-mode="debruijn" id="tabModeDeBruijn">De Bruijn 记法 (λλ1)</button>
+        </div>
+
+        <textarea id="expressionInput" class="expr-textarea" spellcheck="false" placeholder="输入表达式，例如 (\x. x) y 或 (\f. \x. f (f x))"></textarea>
+
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button id="openPresetsModalBtn" class="btn" style="flex: 1; text-align: left; display: flex; justify-content: space-between; align-items: center;" title="打开预设公式列表 / Open Preset Formulas">
+            <span id="lblOpenPresets">预设公式库...</span>
+            <span class="badge-tag" style="font-size: 9px; padding: 0 4px;" id="lblPresetCount">23 项</span>
+          </button>
+          <button id="loadParseBtn" class="btn btn-solid" style="padding: 5px 14px;">解析绘制</button>
+        </div>
+
+        <div class="symbol-rack">
+          <span class="symbol-key" data-sym="λ">λ</span>
+          <span class="symbol-key" data-sym="\">\\</span>
+          <span class="symbol-key" data-sym="/">/</span>
+          <span class="symbol-key" data-sym=".">.</span>
+          <span class="symbol-key" data-sym="(">(</span>
+          <span class="symbol-key" data-sym=")">)</span>
+          <span class="symbol-key" data-sym="let ">let</span>
+          <span class="symbol-key" data-sym=" in ">in</span>
+        </div>
+      </div>
+
+      <!-- 5-Phase Animation Stepper Card -->
+      <div class="sidebar-card">
+        <div class="card-header-row">
+          <span id="lblStepperSection">五阶段 β-规约演进器</span>
+          <span id="stepCounterLabel" style="font-family: var(--font-code); color: var(--text-dim);">第 0 步</span>
+        </div>
+
+        <!-- 5-Phase Timeline Bar -->
+        <div class="phase-timeline-bar" title="点击跳转至特定阶段">
+          <div class="phase-pill active" data-phase="1" id="phasePill1">1. 识别红基</div>
+          <div class="phase-pill" data-phase="2" id="phasePill2">2. 关联变量</div>
+          <div class="phase-pill" data-phase="3" id="phasePill3">3. 溶解抽象</div>
+          <div class="phase-pill" data-phase="4" id="phasePill4">4. 执行代换</div>
+          <div class="phase-pill" data-phase="5" id="phasePill5">5. 最终项整流</div>
+        </div>
+
+        <!-- 7-Button Stepper Controls Row (Pure SVG Icons) -->
+        <div class="stepper-row-7">
+          <button id="macroResetBtn" class="btn" title="重置到初始项 (R) / Reset to initial" aria-label="重置">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="3" width="2" height="10" rx="0.5"/><polygon points="14,3 5,8 14,13"/></svg>
+          </button>
+          <button id="macroPrevBtn" class="btn" title="单步后退 (←) / Step backward" aria-label="单步后退">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3.5L4 8l4.5 4.5M13 3.5L8.5 8l4.5 4.5"/></svg>
+          </button>
+          <button id="microPrevBtn" class="btn" title="上一微阶段 / Previous micro-phase" aria-label="上一微阶段">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5L5.5 8 10 12.5"/></svg>
+          </button>
+          <button id="playPauseBtn" class="btn btn-solid" title="自动演示 (Space) / Play" aria-label="自动演示">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><polygon points="4.5,3 13,8 4.5,13"/></svg>
+          </button>
+          <button id="microNextBtn" class="btn" title="下一微阶段 (Shift+→) / Next micro-phase" aria-label="下一微阶段">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+          </button>
+          <button id="macroNextBtn" class="btn" title="单步规约 (→) / Step forward" aria-label="单步规约">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3.5L7.5 8 3 12.5M7.5 3.5L12 8l-4.5 4.5"/></svg>
+          </button>
+          <button id="reduceNormalFormBtn" class="btn" title="规约至范式 / Reduce to normal form" aria-label="规约至范式">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><polygon points="2,3 11,8 2,13"/><rect x="12" y="3" width="2" height="10" rx="0.5"/></svg>
+          </button>
+        </div>
+
+        <!-- Narrative Explanation Box -->
+        <div id="narrativeBox" class="narrative-box">
+          <span id="narrativeText">就绪。可点击“单步规约”或“下一微阶段”查看演算步骤。</span>
+        </div>
+
+        <div class="meta-control-row">
+          <span id="lblStrategy">规约策略:</span>
+          <select id="strategyDropdown" class="ui-select" style="flex: 1;">
+            <option value="normal" id="optNormalOrder">最左最外优先 (正常序)</option>
+            <option value="applicative" id="optApplicativeOrder">应用序 (最内优先)</option>
+          </select>
+        </div>
+
+        <div class="meta-control-row">
+          <span id="lblSpeed">演示速率:</span>
+          <input type="range" id="animSpeedSlider" min="100" max="1800" value="450" step="50">
+          <span id="speedValueLabel" style="width: 45px; text-align: right; font-family: var(--font-code);">450ms</span>
+        </div>
+      </div>
+
+      <!-- Synchronized Code Inspector -->
+      <div class="sidebar-card">
+        <div class="card-header-row">
+          <span id="lblCodeSection">代码与项对照</span>
+          <button id="copyNamedTermBtn" class="btn" style="padding: 1px 6px; font-size: 10px;">复制表达式</button>
+        </div>
+        <div class="code-inspector-wrap">
+          <span class="label" id="lblNamedNotation">经典变量记法</span>
+          <div id="codeNamedContainer" style="word-break: break-all;">λf. λx. f (f x)</div>
+          <span class="label" style="margin-top: 8px;" id="lblDeBruijnNotation">De Bruijn 索引记法</span>
+          <div id="codeDeBruijnContainer" style="color: var(--text-dim); word-break: break-all;">\ \ 2 (2 1)</div>
+        </div>
+      </div>
+
+      <!-- Step History Table -->
+      <div class="sidebar-card" style="flex: 1; display: flex; flex-direction: column; min-height: 180px;">
+        <div class="card-header-row">
+          <span id="lblHistorySection">规约历史</span>
+          <span id="historyBadgeCount" class="badge-tag" style="font-size: 10px;">1 步</span>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th style="width: 28px;">#</th>
+                <th style="width: 58px;" id="thHistRule">规则</th>
+                <th id="thHistTerm">表达式</th>
+              </tr>
+            </thead>
+            <tbody id="stepHistoryTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="canvas-viewport-wrap">
+
+      <!-- Viewport Top Toolbar -->
+      <div class="canvas-top-bar">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="view-tabs-group">
+            <button class="view-tab active" data-tab="svg" id="tabSvgView">SVG 矢量图</button>
+            <button class="view-tab" data-tab="boxchar" id="tabBoxCharView">Unicode 制表画</button>
+            <button class="view-tab" data-tab="ascii" id="tabAsciiView">ASCII 点阵网格</button>
+          </div>
+
+          <div style="height: 16px; width: 1px; background: var(--border); margin: 0 4px;"></div>
+
+          <select id="diagramStyleSelect" class="ui-select" title="Tromp Style">
+            <option value="standard" id="optStyleStd">标准风格 (最左变量连接)</option>
+            <option value="alt" id="optStyleAlt">替代风格 (最近深层连接)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="exportSvgAction" class="btn" style="padding: 4px 8px; font-size: 11px;">导出 SVG</button>
+          <button id="exportPngAction" class="btn" style="padding: 4px 8px; font-size: 11px;">导出 PNG</button>
+        </div>
+      </div>
+
+      <!-- SVG Canvas View -->
+      <div id="svgCanvasContainer" class="svg-canvas-container">
+        <svg id="primarySvgDiagram" class="main-diagram-svg">
+          <defs>
+            <pattern id="canvasDotPattern" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" fill="var(--grid-dot)" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#canvasDotPattern)" />
+          <g id="diagramSceneGroup">
+            <!-- Diagram layers generated here -->
+          </g>
+        </svg>
+
+        <!-- Floating Viewport Controls -->
+        <div class="floating-viewport-ctrls">
+          <button class="floating-icon-btn" id="ctrlZoomIn" title="放大 / Zoom In">+</button>
+          <button class="floating-icon-btn" id="ctrlZoomOut" title="缩小 / Zoom Out">−</button>
+          <button class="floating-icon-btn" id="ctrlFitDiagram" title="视口居中自适应 / Fit View">FIT</button>
+          <button class="floating-icon-btn" id="ctrlResetZoom" title="重置比例 (1:1)">1:1</button>
+        </div>
+      </div>
+
+      <!-- Monospace Box-Art & ASCII Text View -->
+      <div id="monoViewContainer" class="mono-view-container">
+        <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span id="monoTitleLabel" style="font-weight: 600; font-size: 12px; color: var(--text-muted);">John Tromp Unicode 制表字符画 (boxChar)</span>
+          <button id="copyMonoTextBtn" class="btn btn-solid" style="font-size: 11px;">复制字符画</button>
+        </div>
+        <pre id="monoDiagramDisplay" class="mono-card"></pre>
+      </div>
+
+      <!-- Interactive Hover Tooltip -->
+      <div id="nodeInspectorTooltip" class="interactive-tooltip">
+        <div class="t-head" id="tooltipHeader">元素</div>
+        <div class="t-body" id="tooltipContent">详情</div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Presets Selection List Table Modal -->
+  <div id="presetsModal" class="modal-backdrop">
+    <div class="modal-box modal-box-lg">
+      <div class="modal-top">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 id="modalPresetsTitle">预设公式库</h2>
+          <span class="badge-tag" id="modalPresetsBadge">23 个经典公式</span>
+        </div>
+        <button class="close-modal-btn" data-modal="presetsModal">×</button>
+      </div>
+
+      <!-- Search & Category Filters -->
+      <div class="preset-filter-toolbar">
+        <input type="text" id="presetSearchInput" class="preset-search-input" placeholder="快速筛选名称、组合子或表达式...">
+        <div class="preset-category-tabs" id="presetCategoryTabs">
+          <button class="preset-cat-tab active" data-category="all" id="catTabAll">全部</button>
+          <button class="preset-cat-tab" data-category="church" id="catTabChurch">Church 计数</button>
+          <button class="preset-cat-tab" data-category="core" id="catTabCore">基础组合子</button>
+          <button class="preset-cat-tab" data-category="arithmetic" id="catTabArith">算术与逻辑</button>
+          <button class="preset-cat-tab" data-category="classics" id="catTabClassics">Tromp 经典项</button>
+        </div>
+      </div>
+
+      <!-- Presets Table Container (Custom scrollbar applied) -->
+      <div class="presets-table-container">
+        <table class="presets-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;" id="thSymbol">名称 / 标识</th>
+              <th style="width: 37%;" id="thExpression">Lambda 表达式</th>
+              <th style="width: 16%;" id="thCategory">类别</th>
+              <th style="width: 22%;" id="thDescription">说明</th>
+              <th style="width: 10%; text-align: right;" id="thAction">操作</th>
+            </tr>
+          </thead>
+          <tbody id="presetsTableBody">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer-note">
+        <span id="txtModalFooterTip">提示：点击列表任意行或点击右侧 [载入]，即可将该公式载入工作台并立即绘制 Tromp 图。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Guide Modal -->
+  <div id="visualGuideModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="modalGuideTitle">John Tromp Lambda 图解指南</h2>
+        <button class="close-modal-btn" data-modal="visualGuideModal">×</button>
+      </div>
+      <div class="modal-inner" id="modalGuideBody">
+        <!-- Content populated via i18n -->
+      </div>
+    </div>
+  </div>
+
+  <!-- About John Tromp Modal -->
+  <div id="aboutTrompModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="modalAboutTitle">关于 John Tromp 与二进制 Lambda 演算</h2>
+        <button class="close-modal-btn" data-modal="aboutTrompModal">×</button>
+      </div>
+      <div class="modal-inner" id="modalAboutBody">
+        <!-- Content populated via i18n -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * SECTION 1: Internationalization (i18n) Engine
+     * =========================================================================
+     */
+    let currentLang = 'zh'; // 'zh' | 'en'
+
+    const I18N = {
+      zh: {
+        brandTitle: "John Tromp Lambda 图动态演算工作台",
+        badge: "Tromp Diagrams",
+        brandSub: "纯黑白极简电路式几何拓扑 · 五阶段 β-规约动态演示 · 作用域分析器",
+        langToggle: "English",
+        themeToggleLight: "浅色模式",
+        themeToggleDark: "深色模式",
+        guideBtn: "图解指南",
+        aboutBtn: "关于 Tromp",
+        inputSection: "表达式输入",
+        statusReady: "就绪",
+        statusParsed: "已解析",
+        statusError: "语法错误",
+        statusNormal: "已达范式",
+        statusRedex: "红基待规约",
+        statusLoop: "循环熔断 (>300步)",
+        tabClassic: "经典记法 (λx.x)",
+        tabDeBruijn: "De Bruijn 记法 (λλ1)",
+        placeholderClassic: "输入表达式，例如 (\\x. x) y 或 (\\f. \\x. f (f x))",
+        placeholderDeBruijn: "输入 De Bruijn 索引序列，例如 λλ1 或 \\ \\ 2 (2 1)",
+        parseBtn: "解析绘制",
+        stepperSection: "五阶段 β-规约演进器",
+        stepCounterPrefix: "第",
+        stepCounterSuffix: "步",
+        phasePill1: "1. 锁定红基",
+        phasePill2: "2. 关联形参",
+        phasePill3: "3. 溶解横梁",
+        phasePill4: "4. 代换接入",
+        phasePill5: "5. 最终整流",
+        microPrev: "上一阶段",
+        microNext: "下一阶段",
+        macroReset: "重置",
+        macroPrev: "单步后退",
+        macroNext: "单步规约",
+        macroPlay: "自动演示",
+        macroPause: "暂停演示",
+        reduceNormal: "规约至范式",
+        strategyLabel: "规约策略:",
+        optNormal: "最左最外优先 (正常序)",
+        optApplicative: "应用序 (最内优先)",
+        speedLabel: "演示速率:",
+        codeSection: "代码与项对照",
+        copyCodeBtn: "复制表达式",
+        copiedToast: "已复制",
+        namedLabel: "经典变量记法",
+        deBruijnLabel: "De Bruijn 索引记法",
+        historySection: "规约历史",
+        historyBadgeSteps: (n) => `${n} 步`,
+        thHistRule: "规则",
+        thHistTerm: "表达式",
+        histRuleInit: "初始",
+        histRuleBeta: "β-规约",
+        histRuleNormal: "范式",
+        initialTermLabel: "初始项",
+        tabSvg: "SVG 矢量图",
+        tabBoxChar: "Unicode 制表画",
+        tabAscii: "ASCII 点阵网格",
+        optStyleStd: "标准风格 (最左变量连接)",
+        optStyleAlt: "替代风格 (最近深层连接)",
+        showLabels: "显示标签",
+        smoothAnim: "平滑动画",
+        exportSvg: "导出 SVG",
+        exportPng: "导出 PNG",
+        copyBoxCharBtn: "复制字符画",
+        boxCharTitle: "John Tromp Unicode 制表字符画 (boxChar)",
+        asciiTitle: "John Tromp Raw ASCII 点阵网格 (_ 与 |)",
+        readyNarrative: "就绪。可点击“单步规约”或“下一微阶段”查看演算步骤。",
+        normalFormNarrative: "当前项已达范式（Normal Form），无可规约红基。",
+        loopNarrative: "连续规约超过 300 步，可能存在循环或发散项（如 Omega 组合子）。",
+        tooltipAbs: "λ-抽象函数",
+        tooltipVar: "绑定变量",
+        tooltipApp: "应用连接桥",
+        tooltipRedex: "β-红基应用 (点击定向规约)",
+        openPresetsBtn: "预设公式库...",
+        modalPresetsTitle: "预设公式库",
+        modalPresetsBadge: "23 个经典公式",
+        searchPresetsPlaceholder: "快速筛选名称、组合子或表达式...",
+        catAll: "全部",
+        thSymbol: "名称 / 标识",
+        thExpression: "Lambda 表达式",
+        thCategory: "类别",
+        thDescription: "说明",
+        thAction: "操作",
+        btnLoadPreset: "载入",
+        txtModalFooterTip: "提示：点击列表任意行或点击右侧 [载入]，即可将该公式载入工作台并立即绘制 Tromp 图。",
+        presetCountSuffix: "项",
+        presetGroups: {
+          core: "基础组合子",
+          church: "Church 计数",
+          arithmetic: "算术与逻辑",
+          classics: "Tromp 经典项"
+        },
+        guideHtml: `
+          <p>1997 年，荷兰计算机科学家 <strong>John Tromp</strong> 提出了 <em>Lambda Diagrams</em>（Lambda 图），这是一种针对无类型 Lambda 演算闭项的纯二维几何拓扑表示法。它完全抛弃了容易产生命名混淆的变量名，将计算过程抽象为直观的几何导线与电路。</p>
+          <h3>1. 三大几何原语</h3>
+          <ul>
+            <li><strong>水平线 (─)</strong>：表示 <strong>λ-抽象（函数）</strong>。每当引入一个新的函数参数，就会在其整个作用域体上方绘制一条横向横梁。</li>
+            <li><strong>垂直线 (│)</strong>：表示 <strong>绑定变量的出现</strong>。它从其所属的抽象横线上垂落至使用处。下垂的纵向落差精确对应其 De Bruijn 索引深度！</li>
+            <li><strong>水平连接线 (─)</strong>：表示 <strong>函数应用（Application）</strong>。它如桥梁般水平连通函数的输出端与实参的输入端。</li>
+          </ul>
+          <h3>2. 标准风格与替代风格</h3>
+          <ul>
+            <li><strong>标准风格 (Standard Style)</strong>：应用横梁严格连向函数的<strong>最左侧变量</strong>。线条高度规范、形式完全统一。</li>
+            <li><strong>替代风格 (Alternative Style)</strong>：应用横梁连向<strong>最近的深层变量</strong>。结构更紧凑，常用于高阶素数筛或大数表示。</li>
+          </ul>
+          <h3>3. 五阶段动态 β-规约流程</h3>
+          <ul>
+            <li><strong>阶段 1 (识别红基)</strong>：锁定待求值的 <code>(λx. M) N</code> 应用桥，虚线脉冲指示。</li>
+            <li><strong>阶段 2 (关联变量与参数)</strong>：高亮函数体中所有待替换的形参 $x$ 垂线及实参子图 $N$。</li>
+            <li><strong>阶段 3 (溶解抽象横梁)</strong>：目标 $\lambda x$ 的水平线溶解消失，形参垂线端口开启接收插槽。</li>
+            <li><strong>阶段 4 (执行代换与移位)</strong>：实参 $N$ 复制并接入插槽，外部自由变量索引自动移位修正。</li>
+            <li><strong>阶段 5 (最终项整流)</strong>：新形成的项整流归位至标准 Tromp 网格，进入下一轮。</li>
+          </ul>
+        `,
+        aboutHtml: `
+          <p><strong>John Tromp</strong> 是一位杰出的计算机科学家与数学家，因在<em>算法信息论 (AIT)</em>、完全解决<em>四子棋 (Connect Four)</em>博弈以及发明<strong>二进制 Lambda 演算 (Binary Lambda Calculus, BLC)</strong>而闻名。</p>
+          <h3>二进制 Lambda 演算 (BLC)</h3>
+          <p>在 BLC 中，Tromp 设计了世界上极其精简的图灵完备程序设计语言：</p>
+          <ul>
+            <li><code>00</code> = 抽象 (λ)</li>
+            <li><code>01</code> = 应用</li>
+            <li><code>1...10</code> = 变量 (一进制编码的 De Bruijn 索引)</li>
+          </ul>
+          <p>Tromp 凭借该体系构建了仅占 <strong>21 字节 (168 比特)</strong> 的通用自解释器以及 <strong>167 比特</strong> 的素数筛程序，两者均可通过 Lambda Diagrams 进行可视化呈现！</p>
+        `
+      },
+      en: {
+        brandTitle: "John Tromp's Lambda Diagrams Workstation",
+        badge: "Tromp Diagrams",
+        brandSub: "Monochrome Minimalist Geometric Topology · 5-Phase β-Reduction · Scope Analyzer",
+        langToggle: "中文",
+        themeToggleLight: "Light Theme",
+        themeToggleDark: "Dark Theme",
+        guideBtn: "Visual Guide",
+        aboutBtn: "About Tromp",
+        inputSection: "Expression Input",
+        statusReady: "Ready",
+        statusParsed: "Parsed",
+        statusError: "Syntax Error",
+        statusNormal: "Normal Form",
+        statusRedex: "Redex Ready",
+        statusLoop: "Loop (>300 steps)",
+        tabClassic: "Classic (λx.x)",
+        tabDeBruijn: "De Bruijn (λλ1)",
+        placeholderClassic: "Enter expression, e.g. (\\x. x) y or (\\f. \\x. f (f x))",
+        placeholderDeBruijn: "Enter De Bruijn indices, e.g. λλ1 or \\ \\ 2 (2 1)",
+        parseBtn: "Parse & Render",
+        stepperSection: "5-Phase β-Reduction Stepper",
+        stepCounterPrefix: "Step",
+        stepCounterSuffix: "",
+        phasePill1: "1. Redex",
+        phasePill2: "2. Vars & Arg",
+        phasePill3: "3. Dissolve λ",
+        phasePill4: "4. Substitute",
+        phasePill5: "5. Settle",
+        microPrev: "Prev Phase",
+        microNext: "Next Phase",
+        macroReset: "Reset",
+        macroPrev: "Step Back",
+        macroNext: "Step Forward",
+        macroPlay: "Auto Play",
+        macroPause: "Pause",
+        reduceNormal: "Reduce to Normal Form",
+        strategyLabel: "Strategy:",
+        optNormal: "Normal Order (Leftmost-Outermost)",
+        optApplicative: "Applicative Order (Innermost-First)",
+        speedLabel: "Speed:",
+        codeSection: "Synchronized Code Inspector",
+        copyCodeBtn: "Copy Expression",
+        copiedToast: "Copied",
+        namedLabel: "Classic Named Notation",
+        deBruijnLabel: "De Bruijn Indices",
+        historySection: "Reduction History",
+        historyBadgeSteps: (n) => `${n} ${n === 1 ? 'step' : 'steps'}`,
+        thHistRule: "Rule",
+        thHistTerm: "Term",
+        histRuleInit: "Init",
+        histRuleBeta: "β-Redex",
+        histRuleNormal: "Normal Form",
+        initialTermLabel: "Initial Term",
+        tabSvg: "SVG Vector",
+        tabBoxChar: "Unicode Box-Art",
+        tabAscii: "Raw ASCII Grid",
+        optStyleStd: "Standard Style (Leftmost Vars)",
+        optStyleAlt: "Alternative Style (Deepest Nearest)",
+        showLabels: "Show Labels",
+        smoothAnim: "Smooth Motion",
+        exportSvg: "Export SVG",
+        exportPng: "Export PNG",
+        copyBoxCharBtn: "Copy Box-Art",
+        boxCharTitle: "John Tromp Unicode Box-Drawing (boxChar)",
+        asciiTitle: "John Tromp Raw ASCII Grid (_ and |)",
+        readyNarrative: "Ready. Click 'Step Forward' or 'Next Phase' to view reduction transitions.",
+        normalFormNarrative: "Current term is in Normal Form (no active redexes).",
+        loopNarrative: "Reduction exceeded 300 steps. A cycle or divergence was detected (e.g. Omega).",
+        tooltipAbs: "λ-Abstraction",
+        tooltipVar: "Bound Variable",
+        tooltipApp: "Application Bridge",
+        tooltipRedex: "β-Redex Application (Click to reduce)",
+        openPresetsBtn: "Preset Formulas Library...",
+        modalPresetsTitle: "Preset Formulas Library",
+        modalPresetsBadge: "23 Classics",
+        searchPresetsPlaceholder: "Filter by combinator, name or expression...",
+        catAll: "All",
+        thSymbol: "Symbol / Name",
+        thExpression: "Lambda Expression",
+        thCategory: "Category",
+        thDescription: "Description",
+        thAction: "Action",
+        btnLoadPreset: "Load",
+        txtModalFooterTip: "Tip: Click any row or click [Load] to instantly load the formula into the workspace and render its Tromp diagram.",
+        presetCountSuffix: "items",
+        presetGroups: {
+          core: "Core Combinators",
+          church: "Church Numerals",
+          arithmetic: "Arithmetic & Logic",
+          classics: "Tromp Classics"
+        },
+        guideHtml: `
+          <p>In 1997, Dutch computer scientist <strong>John Tromp</strong> designed <em>Lambda Diagrams</em> as a 2D geometric notation for closed lambda terms. Eliminating arbitrary variable names, computation is exposed directly as circuit routing.</p>
+          <h3>1. The Three Primitives</h3>
+          <ul>
+            <li><strong>Horizontal Lines (─)</strong>: Represent <strong>λ-abstractions (functions)</strong>. Each parameter introduces a horizontal bar spanning across its body scope.</li>
+            <li><strong>Vertical Lines (│)</strong>: Represent <strong>bound variables</strong>. Dropping downwards from their binding λ-bar to where they are evaluated. The height corresponds to its De Bruijn index!</li>
+            <li><strong>Horizontal Links (─)</strong>: Represent <strong>function applications</strong>, bridging the function output stem with the argument input stem.</li>
+          </ul>
+          <h3>2. Standard vs. Alternative Style</h3>
+          <ul>
+            <li><strong>Standard Style</strong>: Applications link the <strong>leftmost variable</strong> of the function, providing a canonical, formal layout.</li>
+            <li><strong>Alternative Style</strong>: Applications link the <strong>nearest deepest variable</strong>, yielding compact, organic structures.</li>
+          </ul>
+          <h3>3. The 5-Phase β-Reduction Process</h3>
+          <ul>
+            <li><strong>Phase 1 (Redex)</strong>: Target <code>(λx. M) N</code> application bridge is highlighted with a pulse.</li>
+            <li><strong>Phase 2 (Variables & Arg)</strong>: Bound variable occurrences in $M$ and argument $N$ are highlighted.</li>
+            <li><strong>Phase 3 (Dissolve λ)</strong>: The binding horizontal bar dissolves, opening reception sockets.</li>
+            <li><strong>Phase 4 (Substitute)</strong>: Argument $N$ is cloned and substituted into sockets; outer indices are shifted.</li>
+            <li><strong>Phase 5 (Settle)</strong>: The new term settles into its canonical Tromp grid layout.</li>
+          </ul>
+        `,
+        aboutHtml: `
+          <p><strong>John Tromp</strong> is a renowned computer scientist and mathematician celebrated for work in <em>Algorithmic Information Theory (AIT)</em>, solving <em>Connect Four</em>, and inventing <strong>Binary Lambda Calculus (BLC)</strong>.</p>
+          <h3>Binary Lambda Calculus (BLC)</h3>
+          <p>BLC is an ultra-minimal universal programming framework:</p>
+          <ul>
+            <li><code>00</code> = Abstraction (λ)</li>
+            <li><code>01</code> = Application</li>
+            <li><code>1...10</code> = Variable (unary De Bruijn index)</li>
+          </ul>
+          <p>Tromp constructed a self-interpreter in only <strong>21 bytes (168 bits)</strong> and a prime sieve in <strong>167 bits</strong>, both visualizable via Lambda Diagrams!</p>
+        `
+      }
+    };
+
+    /**
+     * =========================================================================
+     * SECTION 2: Presets Library
+     * =========================================================================
+     */
+    const PRESET_DEFINITIONS = [
+      {
+        id: 'TWO',
+        group: 'church',
+        name: 'Church 2',
+        code: '\\f. \\x. f (f x)',
+        zh: '\\f. \\x. f (f x) (Church 数 2)',
+        en: '\\f. \\x. f (f x) (Church 2)',
+        zh_desc: 'Church 数 2，对输入参数连续应用两次函数 f',
+        en_desc: 'Church numeral 2, applies function f twice'
+      },
+      {
+        id: 'ZERO',
+        group: 'church',
+        name: 'Church 0',
+        code: '\\f. \\x. x',
+        zh: '\\f. \\x. x (Church 数 0)',
+        en: '\\f. \\x. x (Church 0)',
+        zh_desc: 'Church 数 0，忽略函数 f 并直接返回参数 x',
+        en_desc: 'Church numeral 0, returns x unmodified'
+      },
+      {
+        id: 'ONE',
+        group: 'church',
+        name: 'Church 1',
+        code: '\\f. \\x. f x',
+        zh: '\\f. \\x. f x (Church 数 1)',
+        en: '\\f. \\x. f x (Church 1)',
+        zh_desc: 'Church 数 1，对参数 x 应用一次函数 f',
+        en_desc: 'Church numeral 1, applies function f once'
+      },
+      {
+        id: 'THREE',
+        group: 'church',
+        name: 'Church 3',
+        code: '\\f. \\x. f (f (f x))',
+        zh: '\\f. \\x. f (f (f x)) (Church 数 3)',
+        en: '\\f. \\x. f (f (f x)) (Church 3)',
+        zh_desc: 'Church 数 3，对参数 x 应用三次函数 f',
+        en_desc: 'Church numeral 3, applies function f thrice'
+      },
+      {
+        id: 'FOUR',
+        group: 'church',
+        name: 'Church 4',
+        code: '\\f. \\x. f (f (f (f x)))',
+        zh: '\\f. \\x. f (f (f (f x))) (Church 数 4)',
+        en: '\\f. \\x. f (f (f (f x))) (Church 4)',
+        zh_desc: 'Church 数 4，对参数 x 连续应用四次函数 f',
+        en_desc: 'Church numeral 4, applies function f 4 times'
+      },
+      {
+        id: 'I',
+        group: 'core',
+        name: 'I',
+        code: '\\x. x',
+        zh: '\\x. x (恒等组合子 I)',
+        en: '\\x. x (Identity - I)',
+        zh_desc: '恒等组合子 I (Identity)，直接返回接收到的参数',
+        en_desc: 'Identity combinator I, returns parameter unchanged'
+      },
+      {
+        id: 'K',
+        group: 'core',
+        name: 'K / True',
+        code: '\\x. \\y. x',
+        zh: '\\x. \\y. x (常数组合子 K / True)',
+        en: '\\x. \\y. x (Constant / True - K)',
+        zh_desc: '常数组合子 K / True，丢弃第二个参数并返回第一个',
+        en_desc: 'Constant / True combinator K, drops 2nd argument'
+      },
+      {
+        id: 'FALSE',
+        group: 'core',
+        name: 'False / 0',
+        code: '\\x. \\y. y',
+        zh: '\\x. \\y. y (布尔 False / 0)',
+        en: '\\x. \\y. y (False / 0)',
+        zh_desc: '布尔假 / 0，丢弃第一个参数并返回第二个',
+        en_desc: 'Boolean False / 0, selects 2nd argument'
+      },
+      {
+        id: 'S',
+        group: 'core',
+        name: 'S',
+        code: '\\x. \\y. \\z. (x z) (y z)',
+        zh: '\\x. \\y. \\z. (x z) (y z) (S 组合子)',
+        en: '\\x. \\y. \\z. (x z) (y z) (Combinator S)',
+        zh_desc: '强代换组合子 S，将环境参数 z 同时分发给 x 与 y',
+        en_desc: 'Substitution combinator S, distributes z to x and y'
+      },
+      {
+        id: 'B',
+        group: 'core',
+        name: 'B (Compose)',
+        code: '\\x. \\y. \\z. x (y z)',
+        zh: '\\x. \\y. \\z. x (y z) (复合组合子 B)',
+        en: '\\x. \\y. \\z. x (y z) (Combinator B / Compose)',
+        zh_desc: '复合组合子 B (Compose)，相当于函数复合 (f ∘ g)',
+        en_desc: 'Composition combinator B (f ∘ g)'
+      },
+      {
+        id: 'C',
+        group: 'core',
+        name: 'C (Flip)',
+        code: '\\x. \\y. \\z. x z y',
+        zh: '\\x. \\y. \\z. x z y (交换组合子 C)',
+        en: '\\x. \\y. \\z. x z y (Combinator C / Flip)',
+        zh_desc: '交换组合子 C (Flip)，交换后续两个参数的接受次序',
+        en_desc: 'Flip combinator C, swaps arguments'
+      },
+      {
+        id: 'W',
+        group: 'core',
+        name: 'W (Dup)',
+        code: '\\x. \\y. x y y',
+        zh: '\\x. \\y. x y y (复制组合子 W)',
+        en: '\\x. \\y. x y y (Combinator W / Duplicate)',
+        zh_desc: '复制组合子 W (Duplicate)，将参数 y 重复传递给 x',
+        en_desc: 'Duplication combinator W, feeds y twice to x'
+      },
+      {
+        id: 'SKK',
+        group: 'core',
+        name: 'S K K -> I',
+        code: '(\\x. \\y. \\z. (x z) (y z)) (\\x. \\y. x) (\\x. \\y. x)',
+        zh: 'S K K -> I (S K K 规约到恒等)',
+        en: 'S K K -> I (S K K reduces to I)',
+        zh_desc: '经典组合子定理：S K K 经过两步规约可恒等化为 I',
+        en_desc: 'SK basis theorem: S K K reduces directly to I'
+      },
+      {
+        id: 'Y',
+        group: 'core',
+        name: 'Y Combinator',
+        code: '\\f. (\\x. f (x x)) (\\x. f (x x))',
+        zh: 'Y 不动点组合子',
+        en: 'Y Combinator (Fixed Point)',
+        zh_desc: '著名的不动点组合子 Y，用于在无类型演算中构造递归',
+        en_desc: 'Fixed-point combinator Y, enables recursion'
+      },
+      {
+        id: 'OMEGA',
+        group: 'core',
+        name: 'Omega (Ω)',
+        code: '(\\x. x x) (\\x. x x)',
+        zh: 'Omega (发散项 / 死循环)',
+        en: 'Omega (Divergent Loop)',
+        zh_desc: '发散项 / 死循环，每步 β-规约均恢复自身',
+        en_desc: 'Divergent loop, reproduces itself upon reduction'
+      },
+      {
+        id: 'SUCC_1',
+        group: 'arithmetic',
+        name: 'SUCC 1 -> 2',
+        code: '(\\n. \\f. \\x. f (n f x)) (\\f. \\x. f x)',
+        zh: 'SUCC 1 -> 2 (后继函数)',
+        en: 'SUCC 1 -> 2 (Successor)',
+        zh_desc: 'Church 后继运算：1 的后继可规约为 2',
+        en_desc: 'Successor applied to 1, reduces to 2'
+      },
+      {
+        id: 'PLUS_1_2',
+        group: 'arithmetic',
+        name: '1 + 2 -> 3',
+        code: '(\\m. \\n. \\f. \\x. m f (n f x)) (\\f. \\x. f x) (\\f. \\x. f (f x))',
+        zh: '1 + 2 -> 3 (加法运算)',
+        en: '1 + 2 -> 3 (Addition)',
+        zh_desc: 'Church 加法：计算 1 + 2 逐步规约为 3',
+        en_desc: 'Church addition: 1 + 2 reduces to 3'
+      },
+      {
+        id: 'MULT_2_2',
+        group: 'arithmetic',
+        name: '2 * 2 -> 4',
+        code: '(\\m. \\n. \\f. m (n f)) (\\f. \\x. f (f x)) (\\f. \\x. f (f x))',
+        zh: '2 * 2 -> 4 (乘法运算)',
+        en: '2 * 2 -> 4 (Multiplication)',
+        zh_desc: 'Church 乘法：计算 2 * 2 逐步规约为 4',
+        en_desc: 'Church multiplication: 2 * 2 reduces to 4'
+      },
+      {
+        id: 'PRED_2',
+        group: 'arithmetic',
+        name: 'PRED 2 -> 1',
+        code: '(\\n. \\f. \\x. n (\\g. \\h. h (g f)) (\\u. x) (\\u. u)) (\\f. \\x. f (f x))',
+        zh: 'PRED 2 -> 1 (前驱函数)',
+        en: 'PRED 2 -> 1 (Predecessor)',
+        zh_desc: 'Church 前驱运算：计算 2 的前驱规约为 1',
+        en_desc: 'Church predecessor: PRED 2 reduces to 1'
+      },
+      {
+        id: 'AND_TF',
+        group: 'arithmetic',
+        name: 'AND True False',
+        code: '(\\p. \\q. p q p) (\\x. \\y. x) (\\x. \\y. y)',
+        zh: 'AND True False -> False',
+        en: 'AND True False -> False',
+        zh_desc: '布尔逻辑与：True AND False 规约为 False',
+        en_desc: 'Boolean AND: True AND False reduces to False'
+      },
+      {
+        id: 'OR_FT',
+        group: 'arithmetic',
+        name: 'OR False True',
+        code: '(\\p. \\q. p p q) (\\x. \\y. y) (\\x. \\y. x)',
+        zh: 'OR False True -> True',
+        en: 'OR False True -> True',
+        zh_desc: '布尔逻辑或：False OR True 规约为 True',
+        en_desc: 'Boolean OR: False OR True reduces to True'
+      },
+      {
+        id: 'NOT_T',
+        group: 'arithmetic',
+        name: 'NOT True',
+        code: '(\\p. p (\\x. \\y. y) (\\x. \\y. x)) (\\x. \\y. x)',
+        zh: 'NOT True -> False',
+        en: 'NOT True -> False',
+        zh_desc: '布尔逻辑非：NOT True 规约为 False',
+        en_desc: 'Boolean NOT: NOT True reduces to False'
+      },
+      {
+        id: 'TROMP_PRIMES_FRAG',
+        group: 'classics',
+        name: 'Prime Sieve Frag',
+        code: '(\\n. \\f. n (\\f. \\n. n (f (\\f. \\x. n f (f x)))) (\\x. f) (\\x. x)) (\\f. \\x. f x)',
+        zh: 'Tromp 167 位素数筛片段',
+        en: 'Tromp 167-bit Prime Sieve Fragment',
+        zh_desc: 'John Tromp 167 位素数筛核心状态推进片段',
+        en_desc: 'Fragment of John Tromp 167-bit Prime Sieve'
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * SECTION 3: AST & Parser Engine
+     * =========================================================================
+     */
+    let globalIdGen = 1;
+    function nextId() { return globalIdGen++; }
+
+    function tokenizeNamed(input) {
+      const tokens = [];
+      let i = 0;
+      while (i < input.length) {
+        const c = input[i];
+        if (/\s/.test(c)) { i++; continue; }
+        if (c === '(') { tokens.push({ type: 'LPAREN', pos: i }); i++; continue; }
+        if (c === ')') { tokens.push({ type: 'RPAREN', pos: i }); i++; continue; }
+        if (c === '\\' || c === 'λ' || c === '/') { tokens.push({ type: 'LAMBDA', pos: i }); i++; continue; }
+        if (c === '.') { tokens.push({ type: 'DOT', pos: i }); i++; continue; }
+        if (c === '=') { tokens.push({ type: 'EQUALS', pos: i }); i++; continue; }
+        if (/[a-zA-Z0-9_']/.test(c)) {
+          const start = i;
+          let val = '';
+          while (i < input.length && /[a-zA-Z0-9_']/.test(input[i])) {
+            val += input[i++];
+          }
+          if (val === 'let') tokens.push({ type: 'LET', pos: start });
+          else if (val === 'in') tokens.push({ type: 'IN', pos: start });
+          else tokens.push({ type: 'ID', value: val, pos: start });
+          continue;
+        }
+        i++;
+      }
+      tokens.push({ type: 'EOF', pos: i });
+      return tokens;
+    }
+
+    function parseNamedLambda(input) {
+      const tokens = tokenizeNamed(input);
+      let idx = 0;
+
+      function cur() { return tokens[idx]; }
+      function consume(type) {
+        if (cur().type === type) return tokens[idx++];
+        throw new Error(`Expected '${type}' but found '${cur().type}' at char ${cur().pos}`);
+      }
+
+      function parseExpr() {
+        if (cur().type === 'LET') {
+          consume('LET');
+          const varName = consume('ID').value;
+          consume('EQUALS');
+          const val = parseExpr();
+          consume('IN');
+          const body = parseExpr();
+          return { type: 'app', fn: { type: 'lam', param: varName, body }, arg: val };
+        }
+
+        if (cur().type === 'LAMBDA') {
+          consume('LAMBDA');
+          const params = [];
+          while (cur().type === 'ID') {
+            params.push(consume('ID').value);
+          }
+          if (cur().type === 'DOT') consume('DOT');
+          let body = parseExpr();
+          for (let k = params.length - 1; k >= 0; k--) {
+            body = { type: 'lam', param: params[k], body };
+          }
+          return body;
+        }
+
+        const atoms = [];
+        while (cur().type === 'LPAREN' || cur().type === 'ID' || cur().type === 'LAMBDA') {
+          if (cur().type === 'LAMBDA') {
+            atoms.push(parseExpr());
+            break;
+          }
+          atoms.push(parseAtom());
+        }
+
+        if (atoms.length === 0) {
+          throw new Error(`Expected expression near '${cur().type}' at char ${cur().pos}`);
+        }
+
+        let res = atoms[0];
+        for (let k = 1; k < atoms.length; k++) {
+          res = { type: 'app', fn: res, arg: atoms[k] };
+        }
+        return res;
+      }
+
+      function parseAtom() {
+        if (cur().type === 'LPAREN') {
+          consume('LPAREN');
+          const e = parseExpr();
+          consume('RPAREN');
+          return e;
+        }
+        if (cur().type === 'ID') {
+          return { type: 'var', name: consume('ID').value };
+        }
+        throw new Error(`Unexpected token '${cur().type}' in atom`);
+      }
+
+      const ast = parseExpr();
+      if (cur().type !== 'EOF') {
+        throw new Error(`Extra unexpected token '${cur().type}' at char ${cur().pos}`);
+      }
+      return ast;
+    }
+
+    function parseDeBruijnString(input) {
+      let s = input.replace(/[λ\/]/g, '\\');
+      let i = 0;
+
+      function skipWs() {
+        while (i < s.length && /\s/.test(s[i])) i++;
+      }
+
+      function parseAtom() {
+        skipWs();
+        if (i >= s.length) return null;
+        if (s[i] === '(') {
+          i++;
+          const expr = parseExpr();
+          skipWs();
+          if (s[i] === ')') i++;
+          return expr;
+        }
+        if (s[i] === '\\') {
+          i++;
+          skipWs();
+          const body = parseExpr();
+          return { id: nextId(), type: 'db_lam', param: 'x', body };
+        }
+        if (/[0-9]/.test(s[i])) {
+          let numStr = '';
+          while (i < s.length && /[0-9]/.test(s[i])) {
+            numStr += s[i++];
+          }
+          const n = parseInt(numStr, 10);
+          return { id: nextId(), type: 'db_var', index: Math.max(0, n - 1), name: `v${n}` };
+        }
+        if (/[a-zA-Z_']/.test(s[i])) {
+          let name = '';
+          while (i < s.length && /[a-zA-Z0-9_']/.test(s[i])) {
+            name += s[i++];
+          }
+          return { id: nextId(), type: 'db_var', index: 99, freeName: name };
+        }
+        return null;
+      }
+
+      function parseExpr() {
+        const atoms = [];
+        while (true) {
+          skipWs();
+          if (i >= s.length || s[i] === ')') break;
+          const atom = parseAtom();
+          if (!atom) break;
+          atoms.push(atom);
+        }
+        if (atoms.length === 0) throw new Error('Expected De Bruijn term near position ' + i);
+        let res = atoms[0];
+        for (let k = 1; k < atoms.length; k++) {
+          res = { id: nextId(), type: 'db_app', fn: res, arg: atoms[k] };
+        }
+        return res;
+      }
+
+      return parseExpr();
+    }
+
+    function convertNamedToDB(ast, env = []) {
+      if (ast.type === 'var') {
+        const idx = env.indexOf(ast.name);
+        if (idx === -1) {
+          return { id: nextId(), type: 'db_var', index: env.length, freeName: ast.name };
+        }
+        return { id: nextId(), type: 'db_var', index: idx, name: ast.name };
+      }
+      if (ast.type === 'lam') {
+        return {
+          id: nextId(),
+          type: 'db_lam',
+          param: ast.param,
+          body: convertNamedToDB(ast.body, [ast.param, ...env])
+        };
+      }
+      if (ast.type === 'app') {
+        return {
+          id: nextId(),
+          type: 'db_app',
+          fn: convertNamedToDB(ast.fn, env),
+          arg: convertNamedToDB(ast.arg, env)
+        };
+      }
+    }
+
+    function dbToNamedAST(term, env = [], used = new Set()) {
+      if (term.type === 'db_var') {
+        if (term.index < env.length) {
+          return { type: 'var', name: env[term.index], id: term.id, index: term.index };
+        }
+        return { type: 'var', name: term.freeName || `v${term.index - env.length + 1}`, id: term.id, index: term.index };
+      }
+      if (term.type === 'db_lam') {
+        let base = term.param || 'x';
+        let cand = base;
+        let c = 1;
+        while (used.has(cand)) {
+          cand = `${base}${c++}`;
+        }
+        const newUsed = new Set(used);
+        newUsed.add(cand);
+        return {
+          type: 'lam',
+          param: cand,
+          body: dbToNamedAST(term.body, [cand, ...env], newUsed),
+          id: term.id
+        };
+      }
+      if (term.type === 'db_app') {
+        return {
+          type: 'app',
+          fn: dbToNamedAST(term.fn, env, used),
+          arg: dbToNamedAST(term.arg, env, used),
+          id: term.id
+        };
+      }
+    }
+
+    function renderNamedHtml(ast, parentPrec = 0, highlights = {}) {
+      const isRedex = highlights.redexId === ast.id;
+      const isTargetVar = highlights.targetVarIds && highlights.targetVarIds.includes(ast.id);
+      const isArg = highlights.argId === ast.id;
+
+      let cls = 'syntax-token';
+      if (isRedex) cls += ' highlight-redex';
+      if (isTargetVar) cls += ' highlight-target-var';
+      if (isArg) cls += ' highlight-arg';
+
+      if (ast.type === 'var') {
+        return `<span class="${cls}" data-node-id="${ast.id}">${ast.name}</span>`;
+      }
+      if (ast.type === 'lam') {
+        const bodyStr = renderNamedHtml(ast.body, 0, highlights);
+        const s = `<span class="${cls}" data-node-id="${ast.id}">λ${ast.param}.</span> ${bodyStr}`;
+        return parentPrec > 0 ? `(${s})` : s;
+      }
+      if (ast.type === 'app') {
+        const fnStr = renderNamedHtml(ast.fn, 1, highlights);
+        const argStr = renderNamedHtml(ast.arg, 2, highlights);
+        const s = `${fnStr} ${argStr}`;
+        const wrapped = parentPrec > 1 ? `(${s})` : s;
+        return `<span class="${cls}" data-node-id="${ast.id}">${wrapped}</span>`;
+      }
+      return '';
+    }
+
+    function termToPlainString(term) {
+      if (!term) return '';
+      const named = dbToNamedAST(term);
+      function toStr(ast, prec = 0) {
+        if (!ast) return '';
+        if (ast.type === 'var') return ast.name;
+        if (ast.type === 'lam') {
+          const s = `λ${ast.param}. ${toStr(ast.body, 0)}`;
+          return prec > 0 ? `(${s})` : s;
+        }
+        if (ast.type === 'app') {
+          const fnStr = toStr(ast.fn, 1);
+          const argStr = toStr(ast.arg, 2);
+          const s = `${fnStr} ${argStr}`;
+          return prec > 1 ? `(${s})` : s;
+        }
+        return '';
+      }
+      return toStr(named, 0);
+    }
+
+    function renderDeBruijnHtml(term, parentPrec = 0, highlights = {}) {
+      const isRedex = highlights.redexId === term.id;
+      const isTargetVar = highlights.targetVarIds && highlights.targetVarIds.includes(term.id);
+      const isArg = highlights.argId === term.id;
+
+      let cls = 'syntax-token';
+      if (isRedex) cls += ' highlight-redex';
+      if (isTargetVar) cls += ' highlight-target-var';
+      if (isArg) cls += ' highlight-arg';
+
+      if (term.type === 'db_var') {
+        return `<span class="${cls}" data-node-id="${term.id}">${term.index + 1}</span>`;
+      }
+      if (term.type === 'db_lam') {
+        const bodyStr = renderDeBruijnHtml(term.body, 0, highlights);
+        const s = `<span class="${cls}" data-node-id="${term.id}">\\</span> ${bodyStr}`;
+        return parentPrec > 0 ? `(${s})` : s;
+      }
+      if (term.type === 'db_app') {
+        const fnStr = renderDeBruijnHtml(term.fn, 1, highlights);
+        const argStr = renderDeBruijnHtml(term.arg, 2, highlights);
+        const s = `${fnStr} ${argStr}`;
+        const wrapped = parentPrec > 1 ? `(${s})` : s;
+        return `<span class="${cls}" data-node-id="${term.id}">${wrapped}</span>`;
+      }
+      return '';
+    }
+
+    /**
+     * =========================================================================
+     * SECTION 4: Beta Reduction & Lineage Tracking
+     * =========================================================================
+     */
+    function cloneTreeWithLineage(term, subInstance = null, targetVarId = null) {
+      if (!term) return null;
+      const newId = nextId();
+      const originId = term.originId || term.id;
+      const prevId = term.id;
+      if (term.type === 'db_var') {
+        return {
+          ...term,
+          id: newId,
+          prevNodeId: prevId,
+          originId: originId,
+          subInstance: subInstance,
+          targetVarId: targetVarId
+        };
+      }
+      if (term.type === 'db_app') {
+        return {
+          ...term,
+          id: newId,
+          prevNodeId: prevId,
+          originId: originId,
+          subInstance: subInstance,
+          targetVarId: targetVarId,
+          fn: cloneTreeWithLineage(term.fn, subInstance, targetVarId),
+          arg: cloneTreeWithLineage(term.arg, subInstance, targetVarId)
+        };
+      }
+      if (term.type === 'db_lam') {
+        return {
+          ...term,
+          id: newId,
+          prevNodeId: prevId,
+          originId: originId,
+          subInstance: subInstance,
+          targetVarId: targetVarId,
+          body: cloneTreeWithLineage(term.body, subInstance, targetVarId)
+        };
+      }
+      return term;
+    }
+
+    function incvWithLineage(i, term) {
+      if (!term) return null;
+      const originId = term.originId || term.id;
+      const prevId = term.id;
+      if (term.type === 'db_var') {
+        return {
+          ...term,
+          id: nextId(),
+          prevNodeId: prevId,
+          originId: originId,
+          index: term.index >= i ? term.index + 1 : term.index
+        };
+      }
+      if (term.type === 'db_app') {
+        return {
+          id: nextId(),
+          prevNodeId: prevId,
+          originId: originId,
+          type: 'db_app',
+          subInstance: term.subInstance,
+          targetVarId: term.targetVarId,
+          fn: incvWithLineage(i, term.fn),
+          arg: incvWithLineage(i, term.arg)
+        };
+      }
+      if (term.type === 'db_lam') {
+        return {
+          ...term,
+          id: nextId(),
+          prevNodeId: prevId,
+          originId: originId,
+          subInstance: term.subInstance,
+          targetVarId: term.targetVarId,
+          body: incvWithLineage(i + 1, term.body)
+        };
+      }
+      return term;
+    }
+
+    function substWithLineage(i, body, arg, counterState) {
+      if (!body) return null;
+      const originId = body.originId || body.id;
+      const prevId = body.id;
+      if (body.type === 'db_var') {
+        if (body.index === i) {
+          const instIdx = counterState.count++;
+          return cloneTreeWithLineage(arg, instIdx, body.id);
+        }
+        if (body.index > i) {
+          return {
+            ...body,
+            id: nextId(),
+            prevNodeId: prevId,
+            originId: originId,
+            index: body.index - 1
+          };
+        }
+        return { ...body, prevNodeId: prevId, originId: originId };
+      }
+      if (body.type === 'db_app') {
+        return {
+          ...body,
+          id: nextId(),
+          prevNodeId: prevId,
+          originId: originId,
+          fn: substWithLineage(i, body.fn, arg, counterState),
+          arg: substWithLineage(i, body.arg, arg, counterState)
+        };
+      }
+      if (body.type === 'db_lam') {
+        return {
+          ...body,
+          id: nextId(),
+          prevNodeId: prevId,
+          originId: originId,
+          body: substWithLineage(i + 1, body.body, incvWithLineage(0, arg), counterState)
+        };
+      }
+      return body;
+    }
+
+    function findTargetVariables(body, targetIndex, currentDepth = 0) {
+      const vars = [];
+      function walk(node, depth) {
+        if (!node) return;
+        if (node.type === 'db_var') {
+          if (node.index === targetIndex + depth) {
+            vars.push({ id: node.id, name: node.name || `v${node.index + 1}`, index: node.index });
+          }
+        } else if (node.type === 'db_lam') {
+          walk(node.body, depth + 1);
+        } else if (node.type === 'db_app') {
+          walk(node.fn, depth);
+          walk(node.arg, depth);
+        }
+      }
+      walk(body, currentDepth);
+      return vars;
+    }
+
+    function findAllRedexes(term, path = []) {
+      const list = [];
+      if (!term) return list;
+      if (term.type === 'db_app') {
+        if (term.fn && term.fn.type === 'db_lam') {
+          list.push({ id: term.id, term, path });
+        }
+        list.push(...findAllRedexes(term.fn, [...path, 'fn']));
+        list.push(...findAllRedexes(term.arg, [...path, 'arg']));
+      } else if (term.type === 'db_lam') {
+        list.push(...findAllRedexes(term.body, [...path, 'body']));
+      }
+      return list;
+    }
+
+    function selectRedex(term, strategy = 'normal', targetId = null) {
+      const all = findAllRedexes(term);
+      if (all.length === 0) return null;
+      if (targetId != null) {
+        const found = all.find(r => r.id === targetId);
+        if (found) return found;
+      }
+      if (strategy === 'applicative') {
+        all.sort((a, b) => b.path.length - a.path.length);
+        return all[0];
+      }
+      return all[0];
+    }
+
+    function prepareReductionStep(term, strategy = 'normal', targetRedexId = null) {
+      const redex = selectRedex(term, strategy, targetRedexId);
+      if (!redex) return null;
+
+      const targetApp = redex.term;
+      const lamNode = targetApp.fn;
+      const argNode = targetApp.arg;
+      const boundVars = findTargetVariables(lamNode.body, 0);
+
+      const counterState = { count: 0 };
+      function replaceInTree(t, pathIdx = 0) {
+        if (pathIdx === redex.path.length) {
+          return substWithLineage(0, lamNode.body, argNode, counterState);
+        }
+        const dir = redex.path[pathIdx];
+        if (dir === 'fn') return { ...t, prevNodeId: t.id, fn: replaceInTree(t.fn, pathIdx + 1) };
+        if (dir === 'arg') return { ...t, prevNodeId: t.id, arg: replaceInTree(t.arg, pathIdx + 1) };
+        if (dir === 'body') return { ...t, prevNodeId: t.id, body: replaceInTree(t.body, pathIdx + 1) };
+        return t;
+      }
+
+      const nextTerm = replaceInTree(term);
+      const pName = lamNode.param || 'x';
+
+      function collectSubtreeNodeIds(n) {
+        if (!n) return [];
+        const res = [n.id];
+        if (n.type === 'db_lam') res.push(...collectSubtreeNodeIds(n.body));
+        else if (n.type === 'db_app') res.push(...collectSubtreeNodeIds(n.fn), ...collectSubtreeNodeIds(n.arg));
+        return res;
+      }
+
+      const argNodeIds = collectSubtreeNodeIds(argNode);
+      const redexNodeIds = collectSubtreeNodeIds(targetApp);
+      const argSummary = termToPlainString(argNode) || 'N';
+
+      return {
+        termBefore: term,
+        termAfter: nextTerm,
+        redexId: targetApp.id,
+        lamId: lamNode.id,
+        paramName: pName,
+        argId: argNode.id,
+        argNode: argNode,
+        argNodeIds: argNodeIds,
+        redexNodeIds: redexNodeIds,
+        argSummary: argSummary,
+        targetVarIds: boundVars.map(v => v.id),
+        varCount: boundVars.length,
+        narratives: {
+          zh: {
+            1: `阶段 1 (锁定红基)：识别待规约应用 ((λ${pName}. M) ${argSummary})，焦点框高亮调用横梁与实参子图。`,
+            2: `阶段 2 (关联形参与实参)：在函数体锁定 ${boundVars.length} 处形参 '${pName}'，实参 [${argSummary}] 框选就绪并绘制代换流向线。`,
+            3: `阶段 3 (溶解横梁与开启插槽)：λ${pName} 抽象横梁与红基应用桥溶解解除，形参引线末端开启双环参数接收插槽。`,
+            4: `阶段 4 (执行代换接入)：实参 [${argSummary}] ${boundVars.length > 0 ? '复制并直接代入接入插槽' : '无引用，实参被直接丢弃 (K 组合子)'}，完成自由变量移位。`,
+            5: `阶段 5 (最终项整流归位)：β-规约完成！项几何坐标与拓扑网格整流归位，结算至规范 Tromp 图。`
+          },
+          en: {
+            1: `Phase 1 (Redex Discovery): Spotlighted redex ((λ${pName}. M) ${argSummary}), highlighting application bridge and argument.`,
+            2: `Phase 2 (Match Vars & Arg): Located ${boundVars.length} occurrence(s) of parameter '${pName}'. Argument [${argSummary}] framed with dynamic flow traces.`,
+            3: `Phase 3 (Dissolve λ & Open Sockets): Abstraction bar λ${pName} and application bridge dissolve, opening receptor sockets.`,
+            4: `Phase 4 (Execute Substitution): Argument [${argSummary}] ${boundVars.length > 0 ? 'duplicated and docked into sockets' : 'is discarded (0 references in K-combinator)'}, free variables shifted.`,
+            5: `Phase 5 (Canonical Settlement): β-reduction complete! Coordinates normalized and settled into canonical Tromp diagram.`
+          }
+        }
+      };
+    }
+
+    /**
+     * =========================================================================
+     * SECTION 5: John Tromp Dual-Style Layout Algorithm
+     * =========================================================================
+     */
+    function getLeftmostVarNode(node) {
+      if (!node) return null;
+      while (node.type === 'db_lam') node = node.body;
+      if (node.type === 'db_var') return node;
+      if (node.type === 'db_app') return getLeftmostVarNode(node.fn);
+      return null;
+    }
+
+    function getRightmostVarNode(node) {
+      if (!node) return null;
+      while (node.type === 'db_lam') node = node.body;
+      if (node.type === 'db_var') return node;
+      if (node.type === 'db_app') return getRightmostVarNode(node.arg);
+      return null;
+    }
+
+    function computeTrompLayout(rootTerm, alt = false) {
+      const elements = [];
+      const varMap = new Map();
+      const lamMap = new Map();
+      const appMap = new Map();
+      let breadth = 0;
+      let depth = 0;
+
+      function traverse(node, env) {
+        if (!node) return;
+        if (node.type === 'db_var') {
+          const binder = (node.index < env.length) ? env[node.index] : null;
+          const bLine = binder ? lamMap.get(binder.id) : null;
+          const startY = bLine ? bLine.y : 0;
+          const varLine = {
+            id: node.id,
+            nodeId: node.id,
+            prevNodeId: node.prevNodeId || node.id,
+            originId: node.originId || node.id,
+            subInstance: node.subInstance,
+            targetVarId: node.targetVarId,
+            type: 'variable',
+            name: node.name || (binder ? binder.param : (node.freeName || `v${node.index + 1}`)),
+            index: node.index,
+            isFree: !binder,
+            binderId: binder ? binder.id : null,
+            col: breadth,
+            x1: breadth,
+            x2: breadth,
+            y1: startY,
+            y2: 9999
+          };
+          varMap.set(node.id, varLine);
+          elements.push(varLine);
+          breadth += 1;
+        } else if (node.type === 'db_lam') {
+          const startX = breadth;
+          const lamLine = {
+            id: node.id,
+            nodeId: node.id,
+            prevNodeId: node.prevNodeId || node.id,
+            originId: node.originId || node.id,
+            subInstance: node.subInstance,
+            targetVarId: node.targetVarId,
+            type: 'abstraction',
+            param: node.param || 'x',
+            y: depth,
+            y1: depth,
+            y2: depth,
+            x1: startX,
+            x2: 9999
+          };
+          lamMap.set(node.id, lamLine);
+          elements.push(lamLine);
+
+          depth += 1;
+          traverse(node.body, [node, ...env]);
+          depth -= 1;
+
+          lamLine.x2 = Math.max(startX, breadth - 1);
+        } else if (node.type === 'db_app') {
+          traverse(node.fn, env);
+          traverse(node.arg, env);
+
+          const leftVarNode = alt ? getRightmostVarNode(node.fn) : getLeftmostVarNode(node.fn);
+          const rightVarNode = getLeftmostVarNode(node.arg);
+          const leftVarLine = leftVarNode ? varMap.get(leftVarNode.id) : null;
+          const rightVarLine = rightVarNode ? varMap.get(rightVarNode.id) : null;
+
+          let lowestY = 0;
+          const leftCol = leftVarLine ? leftVarLine.col : 0;
+          const rightCol = rightVarLine ? rightVarLine.col : breadth - 1;
+
+          for (const l of elements) {
+            if (l.type === 'abstraction' || l.type === 'application') {
+              if (l.y > lowestY && l.x2 >= leftCol) {
+                lowestY = l.y;
+              }
+            }
+          }
+
+          const appY = lowestY + 1;
+          if (rightVarLine) {
+            rightVarLine.y2 = appY;
+          }
+
+          const isRedex = (node.fn && node.fn.type === 'db_lam');
+          const appLine = {
+            id: node.id,
+            nodeId: node.id,
+            prevNodeId: node.prevNodeId || node.id,
+            originId: node.originId || node.id,
+            subInstance: node.subInstance,
+            targetVarId: node.targetVarId,
+            type: 'application',
+            isRedex: isRedex,
+            y: appY,
+            y1: appY,
+            y2: appY,
+            x1: leftCol,
+            x2: rightCol,
+            fnVarId: leftVarNode ? leftVarNode.id : null,
+            argVarId: rightVarNode ? rightVarNode.id : null
+          };
+          appMap.set(node.id, appLine);
+          elements.push(appLine);
+        }
+      }
+
+      traverse(rootTerm, []);
+
+      let maxHorizY = 0;
+      for (const l of elements) {
+        if ((l.type === 'abstraction' || l.type === 'application') && l.y > maxHorizY) {
+          maxHorizY = l.y;
+        }
+      }
+
+      const mainVar = getLeftmostVarNode(rootTerm);
+      const mainLine = mainVar ? varMap.get(mainVar.id) : null;
+      if (mainLine) {
+        if (!alt) {
+          mainLine.y2 = maxHorizY + 1;
+        } else {
+          if (mainLine.y2 >= 9999) {
+            mainLine.y2 = maxHorizY;
+          }
+        }
+      }
+
+      for (const l of elements) {
+        if (l.type === 'variable' && l.y2 >= 9999) {
+          l.y2 = maxHorizY + (alt ? 0 : 1);
+        }
+      }
+
+      let maxX = 0, maxY = 0;
+      for (const l of elements) {
+        maxX = Math.max(maxX, l.x1, l.x2);
+        maxY = Math.max(maxY, l.y1, l.y2);
+      }
+
+      return {
+        elements,
+        maxX,
+        maxY,
+        dim: [[maxY, maxX], [0, maxX]]
+      };
+    }
+
+    function generateBoxChar(term, alt = false) {
+      const layout = computeTrompLayout(term, alt);
+      const { elements, maxX, maxY } = layout;
+
+      const UP = 1, RIGHT = 2, DOWN = 4, LEFT = 8;
+      const grid = Array.from({ length: maxY + 1 }, () => new Uint8Array(maxX + 1));
+
+      for (const l of elements) {
+        if (l.type === 'variable') {
+          const c = l.col;
+          for (let r = l.y1; r < l.y2; r++) {
+            grid[r][c] |= DOWN;
+            grid[r + 1][c] |= UP;
+          }
+        } else if (l.type === 'abstraction' || l.type === 'application') {
+          const r = l.y;
+          for (let c = l.x1; c < l.x2; c++) {
+            grid[r][c] |= RIGHT;
+            grid[r][c + 1] |= LEFT;
+          }
+        }
+      }
+
+      const boxChars = {
+        0: ' ',
+        [UP | DOWN]: '│',
+        [LEFT | RIGHT]: '─',
+        [UP | RIGHT]: '└',
+        [UP | LEFT]: '┘',
+        [DOWN | RIGHT]: '┌',
+        [DOWN | LEFT]: '┐',
+        [UP | DOWN | RIGHT]: '├',
+        [UP | DOWN | LEFT]: '┤',
+        [LEFT | RIGHT | DOWN]: '┬',
+        [LEFT | RIGHT | UP]: '┴',
+        [UP | DOWN | LEFT | RIGHT]: '┼',
+        [DOWN]: '│',
+        [UP]: '│',
+        [RIGHT]: '─',
+        [LEFT]: '─'
+      };
+
+      const lines = [];
+      for (let r = 0; r <= maxY; r++) {
+        let rowStr = '';
+        for (let c = 0; c <= maxX; c++) {
+          rowStr += (boxChars[grid[r][c]] || ' ') + ' ';
+        }
+        lines.push(rowStr.replace(/\s+$/, ''));
+      }
+      return lines.join('\n');
+    }
+
+    function generateAsciiGrid(term, alt = false) {
+      const layout = computeTrompLayout(term, alt);
+      const { elements, maxX, maxY } = layout;
+      const grid = Array.from({ length: maxY + 1 }, () => Array(maxX + 1).fill(' '));
+
+      for (const l of elements) {
+        if (l.type === 'abstraction' || l.type === 'application') {
+          for (let c = l.x1; c <= l.x2; c++) {
+            grid[l.y][c] = (grid[l.y][c] === '|' ? '+' : '_');
+          }
+        } else if (l.type === 'variable') {
+          for (let r = l.y1; r <= l.y2; r++) {
+            grid[r][l.col] = (grid[r][l.col] === '_' ? '+' : '|');
+          }
+        }
+      }
+
+      return grid.map(row => row.join(' ').replace(/\s+$/, '')).join('\n');
+    }
+
+    /**
+     * =========================================================================
+     * SECTION 6: SVG Diagram Renderer & Motion Morphing Engine
+     * =========================================================================
+     */
+    let panZoom = { x: 70, y: 60, scale: 1.0 };
+    let draggingPan = false;
+    let panAnchor = { x: 0, y: 0 };
+    let activeAnimationRaf = null;
+
+    const DIAG_STYLE = {
+      cellW: 46,
+      cellH: 44,
+      offsetX: 60,
+      offsetY: 60,
+      serif: 14
+    };
+
+    function getElementCoords(el) {
+      const { cellW, cellH, offsetX, offsetY, serif } = DIAG_STYLE;
+      if (el.type === 'abstraction') {
+        const yPx = offsetY + el.y * cellH;
+        return {
+          x1: offsetX + el.x1 * cellW - serif,
+          y1: yPx,
+          x2: offsetX + el.x2 * cellW + serif,
+          y2: yPx
+        };
+      }
+      if (el.type === 'variable') {
+        const xPx = offsetX + el.col * cellW;
+        return {
+          x1: xPx,
+          y1: offsetY + el.y1 * cellH,
+          x2: xPx,
+          y2: offsetY + el.y2 * cellH
+        };
+      }
+      if (el.type === 'application') {
+        const yPx = offsetY + el.y * cellH;
+        return {
+          x1: offsetX + el.x1 * cellW,
+          y1: yPx,
+          x2: offsetX + el.x2 * cellW,
+          y2: yPx
+        };
+      }
+      return { x1: 0, y1: 0, x2: 0, y2: 0 };
+    }
+
+    function renderTrompDiagram(term, options = {}) {
+      if (activeAnimationRaf) {
+        cancelAnimationFrame(activeAnimationRaf);
+        activeAnimationRaf = null;
+      }
+
+      const {
+        alt = false,
+        showLabels = true,
+        phase = 1,
+        reductionMeta = null,
+        hoverNodeId = null,
+        isAutoPlaying = appState.isPlaying
+      } = options;
+
+      const scene = document.getElementById('diagramSceneGroup');
+      scene.innerHTML = '';
+      if (!term) return;
+
+      const layout = computeTrompLayout(term, alt);
+      const linkLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const varLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const absLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const effectLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const labelLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+      scene.appendChild(linkLayer);
+      scene.appendChild(varLayer);
+      scene.appendChild(absLayer);
+      scene.appendChild(effectLayer);
+      scene.appendChild(labelLayer);
+
+      const redexId = reductionMeta ? reductionMeta.redexId : null;
+      const lamId = reductionMeta ? reductionMeta.lamId : null;
+      const targetVarIds = reductionMeta ? (reductionMeta.targetVarIds || []) : [];
+      const argNodeIds = reductionMeta ? (reductionMeta.argNodeIds || []) : [];
+      const redexNodeIds = reductionMeta ? (reductionMeta.redexNodeIds || []) : [];
+      const paramName = reductionMeta ? (reductionMeta.paramName || 'x') : 'x';
+      const argSummary = reductionMeta ? (reductionMeta.argSummary || 'N') : 'N';
+
+      function getBoundingBox(els) {
+        if (!els || els.length === 0) return null;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        els.forEach(el => {
+          const c = getElementCoords(el);
+          minX = Math.min(minX, c.x1, c.x2);
+          maxX = Math.max(maxX, c.x1, c.x2);
+          minY = Math.min(minY, c.y1, c.y2);
+          maxY = Math.max(maxY, c.y1, c.y2);
+        });
+        if (minX === Infinity) return null;
+        return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+      }
+
+      const redexEls = redexNodeIds.length > 0 ? layout.elements.filter(e => redexNodeIds.includes(e.nodeId)) : [];
+      const argEls = argNodeIds.length > 0 ? layout.elements.filter(e => argNodeIds.includes(e.nodeId)) : [];
+      const redexBox = getBoundingBox(redexEls);
+      const argBox = getBoundingBox(argEls);
+
+      // 1. Abstractions
+      layout.elements.filter(e => e.type === 'abstraction').forEach(abs => {
+        const coords = getElementCoords(abs);
+        let cls = 'diag-abs';
+        if (hoverNodeId === abs.id) cls += ' diag-highlighted';
+        if (hoverNodeId != null && hoverNodeId !== abs.id) cls += ' diag-dimmed';
+
+        if (reductionMeta && !isAutoPlaying) {
+          if (phase === 1 && !redexNodeIds.includes(abs.nodeId)) cls += ' diag-dimmed';
+          if (phase === 2 && !redexNodeIds.includes(abs.nodeId)) cls += ' diag-dimmed';
+          if (phase === 3 && abs.id === lamId) cls += ' diag-dissolving';
+          if (phase === 4 && abs.id === lamId) return; // Completely dissolved in Phase 4
+        }
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', coords.x1);
+        line.setAttribute('y1', coords.y1);
+        line.setAttribute('x2', coords.x2);
+        line.setAttribute('y2', coords.y2);
+        line.setAttribute('class', cls);
+        line.setAttribute('data-id', abs.id);
+        line.setAttribute('data-type', 'abs');
+        line.setAttribute('data-info', `λ${abs.param} (Depth ${abs.y})`);
+        absLayer.appendChild(line);
+
+        if (showLabels && !(reductionMeta && !isAutoPlaying && phase === 4 && abs.id === lamId)) {
+          const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          txt.setAttribute('x', coords.x1 - 6);
+          txt.setAttribute('y', coords.y1 + 4);
+          txt.setAttribute('text-anchor', 'end');
+          txt.setAttribute('class', 'diag-label');
+          txt.textContent = `λ${abs.param}`;
+          labelLayer.appendChild(txt);
+        }
+      });
+
+      // 2. Variables
+      layout.elements.filter(e => e.type === 'variable').forEach(v => {
+        const coords = getElementCoords(v);
+        let cls = 'diag-var';
+        const isTargetVar = targetVarIds.includes(v.id);
+        const isArgVar = argNodeIds.includes(v.nodeId);
+
+        if (reductionMeta && !isAutoPlaying) {
+          if (phase === 1 && !redexNodeIds.includes(v.nodeId)) cls += ' diag-dimmed';
+          if (phase === 2) {
+            if (isTargetVar) cls += ' diag-target-var';
+            else if (isArgVar) cls += ' diag-highlighted';
+            else if (!redexNodeIds.includes(v.nodeId)) cls += ' diag-dimmed';
+          }
+          if (phase === 3) {
+            if (isTargetVar) cls += ' diag-target-var';
+            else if (!redexNodeIds.includes(v.nodeId)) cls += ' diag-dimmed';
+          }
+          if (phase === 4) {
+            if (isTargetVar) cls += ' diag-target-var';
+          }
+        }
+
+        if (hoverNodeId === v.id) cls += ' diag-highlighted';
+        else if (hoverNodeId != null && hoverNodeId !== v.id) cls += ' diag-dimmed';
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', coords.x1);
+        line.setAttribute('y1', coords.y1);
+        line.setAttribute('x2', coords.x2);
+        line.setAttribute('y2', coords.y2);
+        line.setAttribute('class', cls);
+        line.setAttribute('data-id', v.id);
+        line.setAttribute('data-type', 'var');
+        line.setAttribute('data-info', `${v.name} (Index ${v.index + 1})`);
+        varLayer.appendChild(line);
+
+        // Junction dot at binding abstraction (detached in Phase 3 & 4 for target variables)
+        const showDot = !(reductionMeta && !isAutoPlaying && (phase === 3 || phase === 4) && isTargetVar);
+        if (showDot) {
+          const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          dot.setAttribute('cx', coords.x1);
+          dot.setAttribute('cy', coords.y1);
+          dot.setAttribute('r', 4.5);
+          dot.setAttribute('class', 'diag-dot');
+          varLayer.appendChild(dot);
+        }
+
+        if (showLabels) {
+          const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          lbl.setAttribute('x', coords.x1);
+          lbl.setAttribute('y', coords.y2 + 15);
+          lbl.setAttribute('text-anchor', 'middle');
+          lbl.setAttribute('class', 'diag-label');
+          lbl.setAttribute('font-size', '10px');
+          lbl.textContent = v.name;
+          labelLayer.appendChild(lbl);
+        }
+      });
+
+      // 3. Applications
+      layout.elements.filter(e => e.type === 'application').forEach(app => {
+        const coords = getElementCoords(app);
+        const isCurrentRedex = (app.id === redexId);
+        const isArgApp = argNodeIds.includes(app.nodeId);
+
+        let bridgeCls = 'diag-app';
+        if (reductionMeta) {
+          if (isCurrentRedex) {
+            bridgeCls += ' diag-redex-bridge';
+          } else if (!isAutoPlaying) {
+            if (phase === 1 || phase === 2 || phase === 3) {
+              if (isArgApp) bridgeCls += ' diag-highlighted';
+              else if (!redexNodeIds.includes(app.nodeId)) bridgeCls += ' diag-dimmed';
+            } else if (phase === 4) {
+              // Nothing extra
+            }
+          }
+        }
+
+        if (hoverNodeId === app.id) bridgeCls += ' diag-highlighted';
+        else if (hoverNodeId != null && hoverNodeId !== app.id) bridgeCls += ' diag-dimmed';
+
+        const bridge = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        bridge.setAttribute('x1', coords.x1);
+        bridge.setAttribute('y1', coords.y1);
+        bridge.setAttribute('x2', coords.x2);
+        bridge.setAttribute('y2', coords.y2);
+        bridge.setAttribute('class', bridgeCls);
+        bridge.setAttribute('data-id', app.id);
+        bridge.setAttribute('data-is-redex', app.isRedex);
+        bridge.setAttribute('data-type', 'app');
+        bridge.setAttribute('data-info', app.isRedex ? I18N[currentLang].tooltipRedex : I18N[currentLang].tooltipApp);
+        linkLayer.appendChild(bridge);
+      });
+
+      // 4. Distinct 5-Phase Visual System (suppressed during continuous auto-play to avoid strobe flashing)
+      if (reductionMeta && !isAutoPlaying) {
+        // --- PHASE 1: 锁定红基 ---
+        if (phase === 1 && redexBox) {
+          const frame = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          frame.setAttribute('x', redexBox.minX - 12);
+          frame.setAttribute('y', redexBox.minY - 14);
+          frame.setAttribute('width', redexBox.width + 24);
+          frame.setAttribute('height', redexBox.height + 26);
+          frame.setAttribute('class', 'phase-spotlight-frame');
+          effectLayer.appendChild(frame);
+
+          const redexEl = layout.elements.find(e => e.id === redexId);
+          if (redexEl) {
+            const rCoords = getElementCoords(redexEl);
+            const badgeW = 160;
+            const badgeH = 18;
+            const bx = (rCoords.x1 + rCoords.x2) / 2 - badgeW / 2;
+            const by = rCoords.y1 - 22;
+
+            const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bgRect.setAttribute('x', bx);
+            bgRect.setAttribute('y', by);
+            bgRect.setAttribute('width', badgeW);
+            bgRect.setAttribute('height', badgeH);
+            bgRect.setAttribute('fill', 'var(--text)');
+            bgRect.setAttribute('rx', '3');
+            effectLayer.appendChild(bgRect);
+
+            const bTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            bTxt.setAttribute('x', bx + badgeW / 2);
+            bTxt.setAttribute('y', by + 13);
+            bTxt.setAttribute('text-anchor', 'middle');
+            bTxt.setAttribute('fill', 'var(--bg-base)');
+            bTxt.setAttribute('font-family', 'var(--font-code)');
+            bTxt.setAttribute('font-size', '10px');
+            bTxt.setAttribute('font-weight', '600');
+            bTxt.textContent = `REDEX: ((λ${paramName}. M) ${argSummary})`;
+            effectLayer.appendChild(bTxt);
+          }
+        }
+
+        // --- PHASE 2: 关联形参与实参 ---
+        else if (phase === 2) {
+          if (argBox) {
+            const argFrame = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            argFrame.setAttribute('x', argBox.minX - 8);
+            argFrame.setAttribute('y', argBox.minY - 12);
+            argFrame.setAttribute('width', Math.max(argBox.width + 16, 80));
+            argFrame.setAttribute('height', argBox.height + 22);
+            argFrame.setAttribute('class', 'phase-arg-box');
+            effectLayer.appendChild(argFrame);
+
+            const tagW = 110;
+            const tagH = 18;
+            const tx = argBox.minX - 6;
+            const ty = argBox.minY - 26;
+            const tagRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            tagRect.setAttribute('x', tx);
+            tagRect.setAttribute('y', ty);
+            tagRect.setAttribute('width', tagW);
+            tagRect.setAttribute('height', tagH);
+            tagRect.setAttribute('fill', 'var(--text)');
+            tagRect.setAttribute('rx', '3');
+            effectLayer.appendChild(tagRect);
+
+            const tagTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            tagTxt.setAttribute('x', tx + tagW / 2);
+            tagTxt.setAttribute('y', ty + 12);
+            tagTxt.setAttribute('text-anchor', 'middle');
+            tagTxt.setAttribute('fill', 'var(--bg-base)');
+            tagTxt.setAttribute('font-family', 'var(--font-code)');
+            tagTxt.setAttribute('font-size', '10px');
+            tagTxt.setAttribute('font-weight', '600');
+            tagTxt.textContent = `实参: [${argSummary}]`;
+            effectLayer.appendChild(tagTxt);
+
+            const targetEls = layout.elements.filter(e => targetVarIds.includes(e.id));
+            if (targetEls.length > 0) {
+              targetEls.forEach(tv => {
+                const c = getElementCoords(tv);
+                const startX = argBox.minX;
+                const startY = (argBox.minY + argBox.maxY) / 2;
+                const endX = c.x1;
+                const endY = c.y2;
+                const midX = (startX + endX) / 2;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${startX} ${startY} C ${midX} ${startY - 15}, ${midX} ${endY}, ${endX} ${endY}`);
+                path.setAttribute('class', 'phase-flow-trace');
+                effectLayer.appendChild(path);
+
+                const beacon = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                beacon.setAttribute('cx', endX);
+                beacon.setAttribute('cy', endY);
+                beacon.setAttribute('r', 5);
+                beacon.setAttribute('class', 'phase-socket-outer');
+                effectLayer.appendChild(beacon);
+              });
+            } else {
+              const warnTag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              warnTag.setAttribute('x', argBox.minX + 4);
+              warnTag.setAttribute('y', argBox.maxY + 16);
+              warnTag.setAttribute('fill', 'var(--text-dim)');
+              warnTag.setAttribute('font-family', 'var(--font-code)');
+              warnTag.setAttribute('font-size', '10px');
+              warnTag.textContent = `(0 处形参引用 · 实参将直接丢弃)`;
+              effectLayer.appendChild(warnTag);
+            }
+          }
+        }
+
+        // --- PHASE 3: 溶解抽象与开启插槽 ---
+        else if (phase === 3) {
+          const lamEl = layout.elements.find(e => e.id === lamId);
+          if (lamEl) {
+            const lCoords = getElementCoords(lamEl);
+            const midX = (lCoords.x1 + lCoords.x2) / 2;
+            const tagW = 120;
+            const tagH = 18;
+            const rx = midX - tagW / 2;
+            const ry = lCoords.y1 - 10;
+
+            const dRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            dRect.setAttribute('x', rx);
+            dRect.setAttribute('y', ry);
+            dRect.setAttribute('width', tagW);
+            dRect.setAttribute('height', tagH);
+            dRect.setAttribute('fill', 'var(--bg-base)');
+            dRect.setAttribute('stroke', 'var(--text)');
+            dRect.setAttribute('stroke-dasharray', '2 2');
+            dRect.setAttribute('rx', '3');
+            effectLayer.appendChild(dRect);
+
+            const dTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            dTxt.setAttribute('x', midX);
+            dTxt.setAttribute('y', ry + 12);
+            dTxt.setAttribute('text-anchor', 'middle');
+            dTxt.setAttribute('fill', 'var(--text)');
+            dTxt.setAttribute('font-family', 'var(--font-code)');
+            dTxt.setAttribute('font-size', '10px');
+            dTxt.textContent = `λ${paramName} 横梁溶解`;
+            effectLayer.appendChild(dTxt);
+          }
+
+          const targetEls = layout.elements.filter(e => targetVarIds.includes(e.id));
+          targetEls.forEach(tv => {
+            const c = getElementCoords(tv);
+
+            const outerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            outerCircle.setAttribute('cx', c.x2);
+            outerCircle.setAttribute('cy', c.y2);
+            outerCircle.setAttribute('r', 8);
+            outerCircle.setAttribute('class', 'phase-socket-outer');
+            effectLayer.appendChild(outerCircle);
+
+            const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            innerCircle.setAttribute('cx', c.x2);
+            innerCircle.setAttribute('cy', c.y2);
+            innerCircle.setAttribute('r', 3);
+            innerCircle.setAttribute('class', 'phase-socket-inner');
+            effectLayer.appendChild(innerCircle);
+
+            const socketLbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            socketLbl.setAttribute('x', c.x2 + 12);
+            socketLbl.setAttribute('y', c.y2 + 4);
+            socketLbl.setAttribute('fill', 'var(--text)');
+            socketLbl.setAttribute('font-family', 'var(--font-code)');
+            socketLbl.setAttribute('font-size', '10px');
+            socketLbl.textContent = `[插槽: ${paramName}]`;
+            effectLayer.appendChild(socketLbl);
+          });
+        }
+
+        // --- PHASE 4: 执行代换接入 ---
+        else if (phase === 4) {
+          const targetEls = layout.elements.filter(e => targetVarIds.includes(e.id));
+          if (targetEls.length > 0) {
+            targetEls.forEach(tv => {
+              const c = getElementCoords(tv);
+              const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+              const stub = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              stub.setAttribute('x1', c.x2);
+              stub.setAttribute('y1', c.y2);
+              stub.setAttribute('x2', c.x2);
+              stub.setAttribute('y2', c.y2 + 10);
+              stub.setAttribute('stroke', 'var(--text)');
+              stub.setAttribute('stroke-width', '2.5');
+              g.appendChild(stub);
+
+              const blockW = 100;
+              const blockH = 22;
+              const bx = c.x2 - blockW / 2;
+              const by = c.y2 + 10;
+
+              const block = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              block.setAttribute('x', bx);
+              block.setAttribute('y', by);
+              block.setAttribute('width', blockW);
+              block.setAttribute('height', blockH);
+              block.setAttribute('class', 'phase-docked-block');
+              g.appendChild(block);
+
+              const bTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              bTxt.setAttribute('x', c.x2);
+              bTxt.setAttribute('y', by + 15);
+              bTxt.setAttribute('text-anchor', 'middle');
+              bTxt.setAttribute('fill', 'var(--text)');
+              bTxt.setAttribute('font-family', 'var(--font-code)');
+              bTxt.setAttribute('font-size', '10px');
+              bTxt.setAttribute('font-weight', '600');
+              bTxt.textContent = `代入 [${argSummary}]`;
+              g.appendChild(bTxt);
+
+              effectLayer.appendChild(g);
+            });
+          } else if (argBox) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+            const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l1.setAttribute('x1', argBox.minX - 4);
+            l1.setAttribute('y1', argBox.minY - 4);
+            l1.setAttribute('x2', argBox.maxX + 4);
+            l1.setAttribute('y2', argBox.maxY + 4);
+            l1.setAttribute('stroke', 'var(--text)');
+            l1.setAttribute('stroke-width', '2');
+            g.appendChild(l1);
+
+            const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l2.setAttribute('x1', argBox.maxX + 4);
+            l2.setAttribute('y1', argBox.minY - 4);
+            l2.setAttribute('x2', argBox.minX - 4);
+            l2.setAttribute('y2', argBox.maxY + 4);
+            l2.setAttribute('stroke', 'var(--text)');
+            l2.setAttribute('stroke-width', '2');
+            g.appendChild(l2);
+
+            const midX = (argBox.minX + argBox.maxX) / 2;
+            const midY = (argBox.minY + argBox.maxY) / 2;
+            const tagW = 140;
+            const tagH = 20;
+
+            const dRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            dRect.setAttribute('x', midX - tagW / 2);
+            dRect.setAttribute('y', midY - tagH / 2);
+            dRect.setAttribute('width', tagW);
+            dRect.setAttribute('height', tagH);
+            dRect.setAttribute('fill', 'var(--text)');
+            dRect.setAttribute('rx', '3');
+            g.appendChild(dRect);
+
+            const dTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            dTxt.setAttribute('x', midX);
+            dTxt.setAttribute('y', midY + 4);
+            dTxt.setAttribute('text-anchor', 'middle');
+            dTxt.setAttribute('fill', 'var(--bg-base)');
+            dTxt.setAttribute('font-family', 'var(--font-code)');
+            dTxt.setAttribute('font-size', '10px');
+            dTxt.setAttribute('font-weight', '600');
+            dTxt.textContent = `实参已丢弃 (K 组合子)`;
+            g.appendChild(dTxt);
+
+            effectLayer.appendChild(g);
+          }
+        }
+
+        // --- PHASE 5: 最终项整流 ---
+        else if (phase === 5) {
+          const settleBadge = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          const bw = 170;
+          const bh = 22;
+          const bx = 16;
+          const by = 16;
+
+          const sRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          sRect.setAttribute('x', bx);
+          sRect.setAttribute('y', by);
+          sRect.setAttribute('width', bw);
+          sRect.setAttribute('height', bh);
+          sRect.setAttribute('fill', 'var(--bg-subpanel)');
+          sRect.setAttribute('stroke', 'var(--border)');
+          sRect.setAttribute('rx', '3');
+          settleBadge.appendChild(sRect);
+
+          const sTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          sTxt.setAttribute('x', bx + bw / 2);
+          sTxt.setAttribute('y', by + 15);
+          sTxt.setAttribute('text-anchor', 'middle');
+          sTxt.setAttribute('fill', 'var(--text)');
+          sTxt.setAttribute('font-family', 'var(--font-code)');
+          sTxt.setAttribute('font-size', '10px');
+          sTxt.setAttribute('font-weight', '600');
+          sTxt.textContent = `β-规约完成 · 几何整流归位`;
+          settleBadge.appendChild(sTxt);
+
+          effectLayer.appendChild(settleBadge);
+        }
+      }
+
+      attachSVGInteractiveEvents();
+    }
+
+    function animateDiagramTransition(termBefore, termAfter, meta, onComplete) {
+      if (activeAnimationRaf) {
+        cancelAnimationFrame(activeAnimationRaf);
+        activeAnimationRaf = null;
+      }
+
+      const alt = (appState.diagramStyle === 'alt');
+      const layoutBefore = computeTrompLayout(termBefore, alt);
+      const layoutAfter = computeTrompLayout(termAfter, alt);
+
+      const scene = document.getElementById('diagramSceneGroup');
+      scene.innerHTML = '';
+
+      const animLinkLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const animVarLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const animAbsLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const animEffectLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const animLabelLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+      scene.appendChild(animLinkLayer);
+      scene.appendChild(animVarLayer);
+      scene.appendChild(animAbsLayer);
+      scene.appendChild(animEffectLayer);
+      scene.appendChild(animLabelLayer);
+
+      const redexId = meta ? meta.redexId : null;
+      const lamId = meta ? meta.lamId : null;
+      const targetVarIds = meta ? (meta.targetVarIds || []) : [];
+
+      // Multi-index mapping for before elements
+      const beforeByNodeId = new Map();
+      const beforeByPrevId = new Map();
+      const beforeByOriginId = new Map();
+      const usedBeforeEls = new Set();
+
+      layoutBefore.elements.forEach(el => {
+        if (el.nodeId != null) beforeByNodeId.set(el.nodeId, el);
+        if (el.prevNodeId != null && !beforeByPrevId.has(el.prevNodeId)) beforeByPrevId.set(el.prevNodeId, el);
+        if (el.originId != null && !beforeByOriginId.has(el.originId)) beforeByOriginId.set(el.originId, el);
+      });
+
+      function findBestBeforeMatch(afterEl) {
+        // Priority 1: Exact unchanged node ID in layoutBefore
+        if (afterEl.nodeId != null && beforeByNodeId.has(afterEl.nodeId)) {
+          const cand = beforeByNodeId.get(afterEl.nodeId);
+          if (cand.type === afterEl.type && !usedBeforeEls.has(cand)) {
+            return cand;
+          }
+        }
+        // Priority 2: Direct predecessor node ID from previous step
+        if (afterEl.prevNodeId != null && beforeByNodeId.has(afterEl.prevNodeId)) {
+          const cand = beforeByNodeId.get(afterEl.prevNodeId);
+          if (cand.type === afterEl.type && !usedBeforeEls.has(cand)) {
+            return cand;
+          }
+        }
+        if (afterEl.prevNodeId != null && beforeByPrevId.has(afterEl.prevNodeId)) {
+          const cand = beforeByPrevId.get(afterEl.prevNodeId);
+          if (cand.type === afterEl.type && !usedBeforeEls.has(cand)) {
+            return cand;
+          }
+        }
+        // Priority 3: Origin ID match
+        if (afterEl.originId != null && beforeByOriginId.has(afterEl.originId)) {
+          const cand = beforeByOriginId.get(afterEl.originId);
+          if (cand.type === afterEl.type && !usedBeforeEls.has(cand)) {
+            return cand;
+          }
+        }
+        if (afterEl.originId != null && beforeByNodeId.has(afterEl.originId)) {
+          const cand = beforeByNodeId.get(afterEl.originId);
+          if (cand.type === afterEl.type && !usedBeforeEls.has(cand)) {
+            return cand;
+          }
+        }
+        // Priority 4: Structural / Semantic match among unused elements of SAME type
+        // Ignore redex lam and redex bridge when finding matches for persistent elements
+        for (const cand of layoutBefore.elements) {
+          if (usedBeforeEls.has(cand)) continue;
+          if (cand.nodeId === lamId || cand.nodeId === redexId || targetVarIds.includes(cand.nodeId)) continue;
+          if (cand.type !== afterEl.type) continue;
+
+          if (afterEl.type === 'variable') {
+            if (cand.name === afterEl.name) return cand;
+          } else if (afterEl.type === 'abstraction') {
+            if (cand.param === afterEl.param) return cand;
+          } else if (afterEl.type === 'application') {
+            return cand;
+          }
+        }
+        // Priority 5: Any unused element of same type (for undo/reset)
+        for (const cand of layoutBefore.elements) {
+          if (usedBeforeEls.has(cand)) continue;
+          if (cand.nodeId === lamId || cand.nodeId === redexId) continue;
+          if (cand.type === afterEl.type) return cand;
+        }
+        return null;
+      }
+
+      const animItems = [];
+
+      // 1. Elements in layoutAfter (Persistent or Dynamically Growing)
+      layoutAfter.elements.forEach(afterEl => {
+        const targetCoords = getElementCoords(afterEl);
+        let startCoords = null;
+        let startOpacity = 1;
+        let isNew = false;
+        const isClone = (afterEl.subInstance !== undefined && afterEl.subInstance !== null);
+
+        let matchBefore = null;
+        if (isClone) {
+          const originEl = beforeByNodeId.get(afterEl.originId) || beforeByOriginId.get(afterEl.originId);
+          if (originEl) {
+            startCoords = getElementCoords(originEl);
+            startOpacity = 1;
+          } else {
+            isNew = true;
+          }
+        } else {
+          matchBefore = findBestBeforeMatch(afterEl);
+          if (matchBefore) {
+            usedBeforeEls.add(matchBefore);
+            startCoords = getElementCoords(matchBefore);
+            startOpacity = 1; // Persistent elements ALWAYS maintain full solid opacity
+          } else {
+            isNew = true;
+          }
+        }
+
+        // Dynamic Axis-Aligned Growth for New Elements:
+        if (isNew) {
+          startOpacity = 0.0;
+          if (afterEl.type === 'abstraction') {
+            const midX = (targetCoords.x1 + targetCoords.x2) / 2;
+            startCoords = { x1: midX, y1: targetCoords.y1, x2: midX, y2: targetCoords.y2 };
+          } else if (afterEl.type === 'variable') {
+            startCoords = { x1: targetCoords.x1, y1: targetCoords.y1, x2: targetCoords.x2, y2: targetCoords.y1 };
+          } else if (afterEl.type === 'application') {
+            startCoords = { x1: targetCoords.x1, y1: targetCoords.y1, x2: targetCoords.x1, y2: targetCoords.y2 };
+          }
+        }
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const cls = afterEl.type === 'abstraction' ? 'diag-abs' : (afterEl.type === 'variable' ? 'diag-var' : 'diag-app');
+        line.setAttribute('class', cls);
+        const parentLayer = afterEl.type === 'abstraction' ? animAbsLayer : (afterEl.type === 'variable' ? animVarLayer : animLinkLayer);
+        parentLayer.appendChild(line);
+
+        animItems.push({
+          dom: line,
+          type: afterEl.type,
+          start: { ...startCoords, opacity: startOpacity },
+          target: { ...targetCoords, opacity: 1.0 }
+        });
+
+        // Synchronized Variable Junction Dots
+        if (afterEl.type === 'variable') {
+          const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          dot.setAttribute('r', 4.5);
+          dot.setAttribute('class', 'diag-dot');
+          animVarLayer.appendChild(dot);
+          const dotStart = isNew
+            ? { cx: targetCoords.x1, cy: targetCoords.y1, opacity: 0.0 }
+            : { cx: startCoords.x1, cy: startCoords.y1, opacity: 1.0 };
+          animItems.push({
+            dom: dot,
+            isDot: true,
+            start: dotStart,
+            target: { cx: targetCoords.x1, cy: targetCoords.y1, opacity: 1.0 }
+          });
+        }
+
+        // Synchronized Text Labels
+        if (appState.showLabels) {
+          if (afterEl.type === 'abstraction') {
+            const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            txt.setAttribute('text-anchor', 'end');
+            txt.setAttribute('class', 'diag-label');
+            txt.textContent = `λ${afterEl.param}`;
+            animLabelLayer.appendChild(txt);
+            const lStart = isNew
+              ? { x: startCoords.x1 - 6, y: targetCoords.y1 + 4, opacity: 0.0 }
+              : { x: startCoords.x1 - 6, y: startCoords.y1 + 4, opacity: 1.0 };
+            animItems.push({
+              dom: txt,
+              isLabel: true,
+              start: lStart,
+              target: { x: targetCoords.x1 - 6, y: targetCoords.y1 + 4, opacity: 1.0 }
+            });
+          } else if (afterEl.type === 'variable') {
+            const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            lbl.setAttribute('text-anchor', 'middle');
+            lbl.setAttribute('class', 'diag-label');
+            lbl.setAttribute('font-size', '10px');
+            lbl.textContent = afterEl.name;
+            animLabelLayer.appendChild(lbl);
+            const lStart = isNew
+              ? { x: targetCoords.x1, y: targetCoords.y1 + 15, opacity: 0.0 }
+              : { x: startCoords.x1, y: startCoords.y2 + 15, opacity: 1.0 };
+            animItems.push({
+              dom: lbl,
+              isLabel: true,
+              start: lStart,
+              target: { x: targetCoords.x1, y: targetCoords.y2 + 15, opacity: 1.0 }
+            });
+          }
+        }
+      });
+
+      // 2. Dissolving & Discarded Elements in layoutBefore (Dynamic Axis-Aligned Retraction)
+      layoutBefore.elements.forEach(beforeEl => {
+        const startCoords = getElementCoords(beforeEl);
+
+        if (beforeEl.nodeId === lamId) {
+          // Dissolving lambda bar retracts inward toward midpoint
+          const midX = (startCoords.x1 + startCoords.x2) / 2;
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('class', 'diag-abs diag-dissolving');
+          animAbsLayer.appendChild(line);
+          animItems.push({
+            dom: line,
+            type: 'abstraction',
+            start: { ...startCoords, opacity: 1.0 },
+            target: { x1: midX, y1: startCoords.y1, x2: midX, y2: startCoords.y1, opacity: 0.0 }
+          });
+
+          if (appState.showLabels) {
+            const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            txt.setAttribute('text-anchor', 'end');
+            txt.setAttribute('class', 'diag-label');
+            txt.textContent = `λ${beforeEl.param}`;
+            animLabelLayer.appendChild(txt);
+            animItems.push({
+              dom: txt,
+              isLabel: true,
+              start: { x: startCoords.x1 - 6, y: startCoords.y1 + 4, opacity: 1.0 },
+              target: { x: midX - 6, y: startCoords.y1 + 4, opacity: 0.0 }
+            });
+          }
+        } else if (beforeEl.nodeId === redexId) {
+          // Dissolving redex bridge retracts horizontally into function anchor
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('class', 'diag-app diag-redex-bridge');
+          animLinkLayer.appendChild(line);
+          animItems.push({
+            dom: line,
+            type: 'application',
+            start: { ...startCoords, opacity: 1.0 },
+            target: { x1: startCoords.x1, y1: startCoords.y1, x2: startCoords.x1, y2: startCoords.y1, opacity: 0.0 }
+          });
+        } else if (targetVarIds.includes(beforeEl.nodeId)) {
+          // Target bound variable retracts into socket
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('class', 'diag-var diag-target-var');
+          animVarLayer.appendChild(line);
+          animItems.push({
+            dom: line,
+            type: 'variable',
+            start: { ...startCoords, opacity: 1.0 },
+            target: { x1: startCoords.x1, y1: startCoords.y2, x2: startCoords.x2, y2: startCoords.y2, opacity: 0.0 }
+          });
+
+          // Expanding receptor socket pulse
+          const socket = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          socket.setAttribute('cx', startCoords.x2);
+          socket.setAttribute('cy', startCoords.y2);
+          socket.setAttribute('r', 6);
+          socket.setAttribute('class', 'receptor-socket');
+          animEffectLayer.appendChild(socket);
+
+          animItems.push({
+            dom: socket,
+            isSocket: true,
+            start: { r: 4.5, opacity: 1.0 },
+            target: { r: 12, opacity: 0.0 }
+          });
+
+          if (appState.showLabels) {
+            const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            lbl.setAttribute('text-anchor', 'middle');
+            lbl.setAttribute('class', 'diag-label');
+            lbl.setAttribute('font-size', '10px');
+            lbl.textContent = beforeEl.name;
+            animLabelLayer.appendChild(lbl);
+            animItems.push({
+              dom: lbl,
+              isLabel: true,
+              start: { x: startCoords.x1, y: startCoords.y2 + 15, opacity: 1.0 },
+              target: { x: startCoords.x1, y: startCoords.y2 + 15, opacity: 0.0 }
+            });
+          }
+        } else if (!usedBeforeEls.has(beforeEl)) {
+          // Discarded invariant branch (e.g. dropped argument in K a b -> a)
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          const cls = beforeEl.type === 'abstraction' ? 'diag-abs' : (beforeEl.type === 'variable' ? 'diag-var' : 'diag-app');
+          line.setAttribute('class', cls + ' diag-dissolving');
+          const parentLayer = beforeEl.type === 'abstraction' ? animAbsLayer : (beforeEl.type === 'variable' ? animVarLayer : animLinkLayer);
+          parentLayer.appendChild(line);
+
+          let targetCollapse = null;
+          if (beforeEl.type === 'abstraction' || beforeEl.type === 'application') {
+            const midX = (startCoords.x1 + startCoords.x2) / 2;
+            targetCollapse = { x1: midX, y1: startCoords.y1, x2: midX, y2: startCoords.y1, opacity: 0.0 };
+          } else if (beforeEl.type === 'variable') {
+            const midY = (startCoords.y1 + startCoords.y2) / 2;
+            targetCollapse = { x1: startCoords.x1, y1: midY, x2: startCoords.x2, y2: midY, opacity: 0.0 };
+          }
+
+          animItems.push({
+            dom: line,
+            type: beforeEl.type,
+            start: { ...startCoords, opacity: 1.0 },
+            target: targetCollapse
+          });
+
+          if (appState.showLabels) {
+            if (beforeEl.type === 'abstraction') {
+              const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              txt.setAttribute('text-anchor', 'end');
+              txt.setAttribute('class', 'diag-label');
+              txt.textContent = `λ${beforeEl.param}`;
+              animLabelLayer.appendChild(txt);
+              animItems.push({
+                dom: txt,
+                isLabel: true,
+                start: { x: startCoords.x1 - 6, y: startCoords.y1 + 4, opacity: 1.0 },
+                target: { x: targetCollapse.x1 - 6, y: targetCollapse.y1 + 4, opacity: 0.0 }
+              });
+            } else if (beforeEl.type === 'variable') {
+              const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              lbl.setAttribute('text-anchor', 'middle');
+              lbl.setAttribute('class', 'diag-label');
+              lbl.setAttribute('font-size', '10px');
+              lbl.textContent = beforeEl.name;
+              animLabelLayer.appendChild(lbl);
+              animItems.push({
+                dom: lbl,
+                isLabel: true,
+                start: { x: startCoords.x1, y: startCoords.y2 + 15, opacity: 1.0 },
+                target: { x: targetCollapse.x1, y: targetCollapse.y2 + 15, opacity: 0.0 }
+              });
+            }
+          }
+        }
+      });
+
+      const duration = Math.max(250, Math.min(1800, appState.playSpeed || 600));
+      const startTime = performance.now();
+
+      function ease(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function tick(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1.0, elapsed / duration);
+        const e = ease(progress);
+
+        animItems.forEach(item => {
+          if (item.isSocket) {
+            const r = lerp(item.start.r, item.target.r, e);
+            const op = lerp(item.start.opacity, item.target.opacity, e);
+            item.dom.setAttribute('r', r);
+            item.dom.setAttribute('stroke-opacity', op);
+            item.dom.style.opacity = op;
+          } else if (item.isDot) {
+            const cx = lerp(item.start.cx, item.target.cx, e);
+            const cy = lerp(item.start.cy, item.target.cy, e);
+            const op = lerp(item.start.opacity, item.target.opacity, e);
+            item.dom.setAttribute('cx', cx);
+            item.dom.setAttribute('cy', cy);
+            item.dom.setAttribute('fill-opacity', op);
+            item.dom.style.opacity = op;
+          } else if (item.isLabel) {
+            const x = lerp(item.start.x, item.target.x, e);
+            const y = lerp(item.start.y, item.target.y, e);
+            const op = lerp(item.start.opacity, item.target.opacity, e);
+            item.dom.setAttribute('x', x);
+            item.dom.setAttribute('y', y);
+            item.dom.setAttribute('fill-opacity', op);
+            item.dom.style.opacity = op;
+          } else {
+            const x1 = lerp(item.start.x1, item.target.x1, e);
+            const y1 = lerp(item.start.y1, item.target.y1, e);
+            const x2 = lerp(item.start.x2, item.target.x2, e);
+            const y2 = lerp(item.start.y2, item.target.y2, e);
+            const op = lerp(item.start.opacity, item.target.opacity, e);
+
+            item.dom.setAttribute('x1', x1);
+            item.dom.setAttribute('y1', y1);
+            item.dom.setAttribute('x2', x2);
+            item.dom.setAttribute('y2', y2);
+            item.dom.setAttribute('stroke-opacity', op);
+            item.dom.style.opacity = op;
+          }
+        });
+
+        if (progress < 1.0) {
+          activeAnimationRaf = requestAnimationFrame(tick);
+        } else {
+          activeAnimationRaf = null;
+          if (onComplete) onComplete();
+        }
+      }
+
+      activeAnimationRaf = requestAnimationFrame(tick);
+    }
+
+    function attachSVGInteractiveEvents() {
+      const svg = document.getElementById('primarySvgDiagram');
+      const tooltip = document.getElementById('nodeInspectorTooltip');
+      const tHead = document.getElementById('tooltipHeader');
+      const tBody = document.getElementById('tooltipContent');
+
+      svg.querySelectorAll('.diag-abs, .diag-var, .diag-app').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          const info = el.getAttribute('data-info');
+          const type = el.getAttribute('data-type');
+          tHead.textContent = type === 'app' ? I18N[currentLang].tooltipApp : (type === 'abs' ? I18N[currentLang].tooltipAbs : I18N[currentLang].tooltipVar);
+          tBody.textContent = info || '';
+          tooltip.style.display = 'block';
+
+          const id = parseInt(el.getAttribute('data-id'), 10);
+          highlightCodeToken(id);
+        });
+
+        el.addEventListener('mousemove', (e) => {
+          const rect = document.getElementById('svgCanvasContainer').getBoundingClientRect();
+          tooltip.style.left = `${e.clientX - rect.left + 15}px`;
+          tooltip.style.top = `${e.clientY - rect.top + 15}px`;
+        });
+
+        el.addEventListener('mouseleave', () => {
+          tooltip.style.display = 'none';
+          clearCodeTokenHighlight();
+        });
+
+        el.addEventListener('click', () => {
+          if (el.getAttribute('data-is-redex') === 'true') {
+            const redexId = parseInt(el.getAttribute('data-id'), 10);
+            triggerSpecificRedex(redexId);
+          }
+        });
+      });
+    }
+
+    function highlightCodeToken(nodeId) {
+      document.querySelectorAll(`[data-node-id="${nodeId}"]`).forEach(el => {
+        el.classList.add('highlight-scope');
+      });
+    }
+
+    function clearCodeTokenHighlight() {
+      document.querySelectorAll('.highlight-scope').forEach(el => {
+        el.classList.remove('highlight-scope');
+      });
+    }
+
+    function updateSceneTransform() {
+      const scene = document.getElementById('diagramSceneGroup');
+      scene.setAttribute('transform', `translate(${panZoom.x}, ${panZoom.y}) scale(${panZoom.scale})`);
+    }
+
+    /**
+     * =========================================================================
+     * SECTION 7: Application State & Controller
+     * =========================================================================
+     */
+    const appState = {
+      initialTerm: null,
+      currentTerm: null,
+      stepHistory: [],
+      currentStepIndex: 0,
+      currentPhase: 1,
+      currentReductionMeta: null,
+      reductionStrategy: 'normal',
+      inputMode: 'classic',
+      diagramStyle: 'standard',
+      showLabels: true,
+      smoothAnimation: true,
+      activeViewTab: 'svg',
+      isPlaying: false,
+      playTimer: null,
+      playSpeed: 600,
+      theme: 'dark'
+    };
+
+    // DOM Elements
+    const exprInput = document.getElementById('expressionInput');
+    const openPresetsModalBtn = document.getElementById('openPresetsModalBtn');
+    const presetsModal = document.getElementById('presetsModal');
+    const loadParseBtn = document.getElementById('loadParseBtn');
+    const syntaxStatus = document.getElementById('syntaxStatus');
+    const stepCounterLabel = document.getElementById('stepCounterLabel');
+    const narrativeText = document.getElementById('narrativeText');
+    const codeNamedContainer = document.getElementById('codeNamedContainer');
+    const codeDeBruijnContainer = document.getElementById('codeDeBruijnContainer');
+    const stepHistoryTableBody = document.getElementById('stepHistoryTableBody');
+    const historyBadgeCount = document.getElementById('historyBadgeCount');
+    const strategyDropdown = document.getElementById('strategyDropdown');
+    const animSpeedSlider = document.getElementById('animSpeedSlider');
+    const speedValueLabel = document.getElementById('speedValueLabel');
+    const diagramStyleSelect = document.getElementById('diagramStyleSelect');
+    const toggleDiagramLabels = document.getElementById('toggleDiagramLabels');
+    const toggleSmoothAnim = document.getElementById('toggleSmoothAnim');
+    const monoTitleLabel = document.getElementById('monoTitleLabel');
+    const monoDiagramDisplay = document.getElementById('monoDiagramDisplay');
+    const svgCanvasContainer = document.getElementById('svgCanvasContainer');
+    const monoViewContainer = document.getElementById('monoViewContainer');
+
+    let currentPresetFilter = { search: '', category: 'all' };
+
+    function renderPresetsTable() {
+      const tbody = document.getElementById('presetsTableBody');
+      if (!tbody) return;
+
+      const q = (currentPresetFilter.search || '').toLowerCase().trim();
+      const cat = currentPresetFilter.category;
+      const t = I18N[currentLang];
+
+      const filtered = PRESET_DEFINITIONS.filter(p => {
+        if (cat !== 'all' && p.group !== cat) return false;
+        if (!q) return true;
+        const n = (p.name || '').toLowerCase();
+        const c = (p.code || '').toLowerCase();
+        const dZh = (p.zh_desc || '').toLowerCase();
+        const dEn = (p.en_desc || '').toLowerCase();
+        return n.includes(q) || c.includes(q) || dZh.includes(q) || dEn.includes(q);
+      });
+
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="5" style="text-align: center; color: var(--text-dim); padding: 24px;">${currentLang === 'zh' ? '无匹配的预设公式' : 'No matching preset formulas'}</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach(preset => {
+        const tr = document.createElement('tr');
+        tr.className = 'preset-row';
+        tr.setAttribute('data-id', preset.id);
+
+        const groupLabel = (t.presetGroups && t.presetGroups[preset.group]) ? t.presetGroups[preset.group] : preset.group;
+        const desc = currentLang === 'zh' ? preset.zh_desc : preset.en_desc;
+
+        tr.innerHTML = `
+          <td class="preset-cell-name">${preset.name}</td>
+          <td class="preset-cell-code"><code>${preset.code}</code></td>
+          <td class="preset-cell-cat">${groupLabel}</td>
+          <td class="preset-cell-desc">${desc}</td>
+          <td style="text-align: right;">
+            <button class="btn btn-solid load-preset-action-btn" data-id="${preset.id}" style="font-size: 11px; padding: 2px 8px;">${t.btnLoadPreset}</button>
+          </td>
+        `;
+
+        tr.addEventListener('click', (e) => {
+          selectAndLoadPreset(preset.id);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function selectAndLoadPreset(presetId) {
+      const found = PRESET_DEFINITIONS.find(p => p.id === presetId);
+      if (found) {
+        if (appState.inputMode !== 'classic') {
+          appState.inputMode = 'classic';
+          document.querySelectorAll('.segmented-tab').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-input-mode') === 'classic');
+          });
+        }
+        exprInput.value = found.code;
+        loadAndParse(found.code);
+        document.getElementById('presetsModal').style.display = 'none';
+      }
+    }
+
+    function updateLanguageUI() {
+      const t = I18N[currentLang];
+      document.getElementById('txtBrandTitle').textContent = t.brandTitle;
+      document.getElementById('txtBadge').textContent = t.badge;
+      document.getElementById('txtBrandSub').textContent = t.brandSub;
+      document.getElementById('langToggleBtn').textContent = t.langToggle;
+      document.getElementById('themeToggleBtn').textContent = appState.theme === 'dark' ? t.themeToggleLight : t.themeToggleDark;
+      document.getElementById('guideModalBtn').textContent = t.guideBtn;
+      document.getElementById('aboutModalBtn').textContent = t.aboutBtn;
+      document.getElementById('lblInputSection').textContent = t.inputSection;
+      document.getElementById('tabModeClassic').textContent = t.tabClassic;
+      document.getElementById('tabModeDeBruijn').textContent = t.tabDeBruijn;
+      document.getElementById('lblOpenPresets').textContent = t.openPresetsBtn;
+      document.getElementById('lblPresetCount').textContent = `${PRESET_DEFINITIONS.length} ${t.presetCountSuffix}`;
+      document.getElementById('modalPresetsTitle').textContent = t.modalPresetsTitle;
+      document.getElementById('modalPresetsBadge').textContent = t.modalPresetsBadge;
+      document.getElementById('presetSearchInput').placeholder = t.searchPresetsPlaceholder;
+      document.getElementById('catTabAll').textContent = t.catAll;
+      document.getElementById('catTabChurch').textContent = t.presetGroups.church;
+      document.getElementById('catTabCore').textContent = t.presetGroups.core;
+      document.getElementById('catTabArith').textContent = t.presetGroups.arithmetic;
+      document.getElementById('catTabClassics').textContent = t.presetGroups.classics;
+      document.getElementById('thSymbol').textContent = t.thSymbol;
+      document.getElementById('thExpression').textContent = t.thExpression;
+      document.getElementById('thCategory').textContent = t.thCategory;
+      document.getElementById('thDescription').textContent = t.thDescription;
+      document.getElementById('thAction').textContent = t.thAction;
+      document.getElementById('txtModalFooterTip').textContent = t.txtModalFooterTip;
+      document.getElementById('loadParseBtn').textContent = t.parseBtn;
+      document.getElementById('lblStepperSection').textContent = t.stepperSection;
+      document.getElementById('phasePill1').textContent = t.phasePill1;
+      document.getElementById('phasePill2').textContent = t.phasePill2;
+      document.getElementById('phasePill3').textContent = t.phasePill3;
+      document.getElementById('phasePill4').textContent = t.phasePill4;
+      document.getElementById('phasePill5').textContent = t.phasePill5;
+      document.getElementById('macroResetBtn').title = `${t.macroReset} (R)`;
+      document.getElementById('macroResetBtn').setAttribute('aria-label', t.macroReset);
+      document.getElementById('macroPrevBtn').title = `${t.macroPrev} (←)`;
+      document.getElementById('macroPrevBtn').setAttribute('aria-label', t.macroPrev);
+      document.getElementById('microPrevBtn').title = `${t.microPrev}`;
+      document.getElementById('microPrevBtn').setAttribute('aria-label', t.microPrev);
+      document.getElementById('playPauseBtn').title = `${appState.isPlaying ? t.macroPause : t.macroPlay} (Space)`;
+      document.getElementById('playPauseBtn').setAttribute('aria-label', appState.isPlaying ? t.macroPause : t.macroPlay);
+      document.getElementById('microNextBtn').title = `${t.microNext} (Shift+→)`;
+      document.getElementById('microNextBtn').setAttribute('aria-label', t.microNext);
+      document.getElementById('macroNextBtn').title = `${t.macroNext} (→)`;
+      document.getElementById('macroNextBtn').setAttribute('aria-label', t.macroNext);
+      document.getElementById('reduceNormalFormBtn').title = `${t.reduceNormal}`;
+      document.getElementById('reduceNormalFormBtn').setAttribute('aria-label', t.reduceNormal);
+      document.getElementById('lblStrategy').textContent = t.strategyLabel;
+      document.getElementById('optNormalOrder').textContent = t.optNormal;
+      document.getElementById('optApplicativeOrder').textContent = t.optApplicative;
+      document.getElementById('lblSpeed').textContent = t.speedLabel;
+      document.getElementById('lblCodeSection').textContent = t.codeSection;
+      document.getElementById('copyNamedTermBtn').textContent = t.copyCodeBtn;
+      document.getElementById('lblNamedNotation').textContent = t.namedLabel;
+      document.getElementById('lblDeBruijnNotation').textContent = t.deBruijnLabel;
+      document.getElementById('lblHistorySection').textContent = t.historySection;
+      const thHistRule = document.getElementById('thHistRule');
+      if (thHistRule) thHistRule.textContent = t.thHistRule;
+      const thHistTerm = document.getElementById('thHistTerm');
+      if (thHistTerm) thHistTerm.textContent = t.thHistTerm;
+      document.getElementById('tabSvgView').textContent = t.tabSvg;
+      document.getElementById('tabBoxCharView').textContent = t.tabBoxChar;
+      document.getElementById('tabAsciiView').textContent = t.tabAscii;
+      document.getElementById('optStyleStd').textContent = t.optStyleStd;
+      document.getElementById('optStyleAlt').textContent = t.optStyleAlt;
+      const lblShowLabels = document.getElementById('lblShowLabels');
+      if (lblShowLabels) lblShowLabels.textContent = t.showLabels;
+      const lblSmoothAnim = document.getElementById('lblSmoothAnim');
+      if (lblSmoothAnim) lblSmoothAnim.textContent = t.smoothAnim;
+      document.getElementById('exportSvgAction').textContent = t.exportSvg;
+      document.getElementById('exportPngAction').textContent = t.exportPng;
+      document.getElementById('copyMonoTextBtn').textContent = t.copyBoxCharBtn;
+      document.getElementById('modalGuideTitle').textContent = t.guideBtn;
+      document.getElementById('modalGuideBody').innerHTML = t.guideHtml;
+      document.getElementById('modalAboutTitle').textContent = t.aboutBtn;
+      document.getElementById('modalAboutBody').innerHTML = t.aboutHtml;
+
+      if (appState.inputMode === 'debruijn') {
+        exprInput.placeholder = t.placeholderDeBruijn;
+      } else {
+        exprInput.placeholder = t.placeholderClassic;
+      }
+
+      renderPresetsTable();
+      syncFullUI();
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+      updateLanguageUI();
+    }
+
+    function toggleTheme() {
+      appState.theme = appState.theme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', appState.theme);
+      document.getElementById('themeToggleBtn').textContent = appState.theme === 'dark'
+        ? I18N[currentLang].themeToggleLight
+        : I18N[currentLang].themeToggleDark;
+    }
+
+    function loadAndParse(inputStr) {
+      const t = I18N[currentLang];
+      try {
+        let dbTerm;
+        if (appState.inputMode === 'debruijn') {
+          dbTerm = parseDeBruijnString(inputStr);
+        } else {
+          const namedAst = parseNamedLambda(inputStr);
+          dbTerm = convertNamedToDB(namedAst);
+        }
+
+        appState.initialTerm = dbTerm;
+        appState.currentTerm = dbTerm;
+        appState.stepHistory = [{ term: dbTerm, rule: 'init' }];
+        appState.currentStepIndex = 0;
+        appState.currentPhase = 1;
+        appState.currentReductionMeta = prepareReductionStep(dbTerm, appState.reductionStrategy);
+
+        pausePlayback();
+        syntaxStatus.className = 'status-badge status-active';
+        syntaxStatus.textContent = t.statusParsed;
+        syncFullUI();
+      } catch (err) {
+        syntaxStatus.className = 'status-badge';
+        syntaxStatus.textContent = t.statusError;
+        narrativeText.textContent = `${t.statusError}: ${err.message}`;
+        codeNamedContainer.innerHTML = `<span style="color: var(--text-dim);">${err.message}</span>`;
+        codeDeBruijnContainer.textContent = '─';
+      }
+    }
+
+    function advanceMicroPhase() {
+      const t = I18N[currentLang];
+      if (!appState.currentReductionMeta) {
+        narrativeText.textContent = t.normalFormNarrative;
+        return;
+      }
+
+      if (appState.currentPhase < 5) {
+        appState.currentPhase++;
+        syncFullUI();
+      } else {
+        advanceMacroStep();
+      }
+    }
+
+    function rewindMicroPhase() {
+      if (appState.currentPhase > 1) {
+        appState.currentPhase--;
+        syncFullUI();
+      } else if (appState.currentStepIndex > 0) {
+        rewindMacroStep();
+      }
+    }
+
+    function advanceMacroStep(onComplete) {
+      const cb = (typeof onComplete === 'function') ? onComplete : null;
+      if (!appState.currentReductionMeta) {
+        if (cb) cb();
+        return;
+      }
+
+      const prevTerm = appState.currentTerm;
+      const meta = appState.currentReductionMeta;
+      const nextTerm = meta.termAfter;
+
+      if (!appState.smoothAnimation || appState.activeViewTab !== 'svg') {
+        commitCurrentStep();
+        if (cb) cb();
+        return;
+      }
+
+      // Smooth motion animation
+      narrativeText.textContent = meta.narratives[currentLang][4];
+      animateDiagramTransition(prevTerm, nextTerm, meta, () => {
+        commitCurrentStep();
+        if (cb) cb();
+      });
+    }
+
+    function commitCurrentStep() {
+      if (!appState.currentReductionMeta) return;
+
+      const nextTerm = appState.currentReductionMeta.termAfter;
+      const t = I18N[currentLang];
+      appState.stepHistory = appState.stepHistory.slice(0, appState.currentStepIndex + 1);
+      appState.stepHistory.push({
+        term: nextTerm,
+        rule: 'beta'
+      });
+      appState.currentStepIndex = appState.stepHistory.length - 1;
+      appState.currentTerm = nextTerm;
+      appState.currentPhase = 1;
+      appState.currentReductionMeta = prepareReductionStep(nextTerm, appState.reductionStrategy);
+
+      syncFullUI();
+    }
+
+    function rewindMacroStep() {
+      if (appState.currentStepIndex <= 0) return;
+
+      const targetIdx = appState.currentStepIndex - 1;
+      const prevTerm = appState.stepHistory[targetIdx].term;
+      const currTerm = appState.currentTerm;
+
+      if (!appState.smoothAnimation || appState.activeViewTab !== 'svg') {
+        appState.currentStepIndex = targetIdx;
+        appState.currentTerm = prevTerm;
+        appState.currentPhase = 1;
+        appState.currentReductionMeta = prepareReductionStep(prevTerm, appState.reductionStrategy);
+        syncFullUI();
+        return;
+      }
+
+      animateDiagramTransition(currTerm, prevTerm, null, () => {
+        appState.currentStepIndex = targetIdx;
+        appState.currentTerm = prevTerm;
+        appState.currentPhase = 1;
+        appState.currentReductionMeta = prepareReductionStep(prevTerm, appState.reductionStrategy);
+        syncFullUI();
+      });
+    }
+
+    function resetToInitial() {
+      if (appState.stepHistory.length > 0) {
+        pausePlayback();
+        const initial = appState.stepHistory[0].term;
+        const current = appState.currentTerm;
+
+        if (appState.smoothAnimation && appState.activeViewTab === 'svg' && appState.currentStepIndex > 0) {
+          animateDiagramTransition(current, initial, null, () => {
+            appState.currentStepIndex = 0;
+            appState.currentTerm = initial;
+            appState.currentPhase = 1;
+            appState.currentReductionMeta = prepareReductionStep(initial, appState.reductionStrategy);
+            syncFullUI();
+          });
+        } else {
+          appState.currentStepIndex = 0;
+          appState.currentTerm = initial;
+          appState.currentPhase = 1;
+          appState.currentReductionMeta = prepareReductionStep(initial, appState.reductionStrategy);
+          syncFullUI();
+        }
+      }
+    }
+
+    function triggerSpecificRedex(redexId) {
+      pausePlayback();
+      const meta = prepareReductionStep(appState.currentTerm, appState.reductionStrategy, redexId);
+      if (!meta) return;
+      appState.currentReductionMeta = meta;
+
+      if (!appState.smoothAnimation || appState.activeViewTab !== 'svg') {
+        commitCurrentStep();
+      } else {
+        animateDiagramTransition(appState.currentTerm, meta.termAfter, meta, () => {
+          commitCurrentStep();
+        });
+      }
+    }
+
+    function togglePlayback() {
+      if (appState.isPlaying) pausePlayback();
+      else startPlayback();
+    }
+
+    const ICON_PLAY_SVG = `<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><polygon points="4.5,3 13,8 4.5,13"/></svg>`;
+    const ICON_PAUSE_SVG = `<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="2.5" height="10" rx="0.5"/><rect x="9.5" y="3" width="2.5" height="10" rx="0.5"/></svg>`;
+
+    function startPlayback() {
+      appState.isPlaying = true;
+      const playBtn = document.getElementById('playPauseBtn');
+      playBtn.innerHTML = ICON_PAUSE_SVG;
+      playBtn.title = `${I18N[currentLang].macroPause} (Space)`;
+      playBtn.setAttribute('aria-label', I18N[currentLang].macroPause);
+      playBtn.classList.add('btn-active');
+      runPlaybackLoop();
+    }
+
+    function pausePlayback() {
+      appState.isPlaying = false;
+      const playBtn = document.getElementById('playPauseBtn');
+      playBtn.innerHTML = ICON_PLAY_SVG;
+      playBtn.title = `${I18N[currentLang].macroPlay} (Space)`;
+      playBtn.setAttribute('aria-label', I18N[currentLang].macroPlay);
+      playBtn.classList.remove('btn-active');
+      if (appState.playTimer) {
+        clearTimeout(appState.playTimer);
+        appState.playTimer = null;
+      }
+      syncFullUI();
+    }
+
+    function runPlaybackLoop() {
+      if (!appState.isPlaying) return;
+
+      if (!appState.currentReductionMeta) {
+        pausePlayback();
+        narrativeText.textContent = I18N[currentLang].normalFormNarrative;
+        return;
+      }
+
+      advanceMacroStep(() => {
+        if (!appState.isPlaying) return;
+        if (!appState.currentReductionMeta) {
+          pausePlayback();
+          narrativeText.textContent = I18N[currentLang].normalFormNarrative;
+          return;
+        }
+        // Settled pause after animation settles before next step begins
+        const pauseDelay = Math.max(120, Math.floor((appState.playSpeed || 600) * 0.3));
+        appState.playTimer = setTimeout(runPlaybackLoop, pauseDelay);
+      });
+    }
+
+    function reduceToNormalForm() {
+      pausePlayback();
+      let steps = 0;
+      const maxSteps = 300;
+      const t = I18N[currentLang];
+
+      while (steps < maxSteps) {
+        const meta = prepareReductionStep(appState.currentTerm, appState.reductionStrategy);
+        if (!meta) break;
+        appState.stepHistory.push({
+          term: meta.termAfter,
+          rule: 'beta'
+        });
+        appState.currentTerm = meta.termAfter;
+        steps++;
+      }
+
+      appState.currentStepIndex = appState.stepHistory.length - 1;
+      appState.currentPhase = 1;
+      appState.currentReductionMeta = prepareReductionStep(appState.currentTerm, appState.reductionStrategy);
+
+      if (steps >= maxSteps) {
+        syntaxStatus.className = 'status-badge';
+        syntaxStatus.textContent = t.statusLoop;
+        narrativeText.textContent = t.loopNarrative;
+      }
+      syncFullUI();
+    }
+
+    function syncFullUI() {
+      const t = I18N[currentLang];
+      const term = (appState.currentPhase === 5 && appState.currentReductionMeta)
+        ? appState.currentReductionMeta.termAfter
+        : appState.currentTerm;
+
+      if (!term) return;
+
+      const meta = appState.currentReductionMeta;
+      const isAlt = (appState.diagramStyle === 'alt');
+
+      document.querySelectorAll('.phase-pill').forEach(pill => {
+        const pNum = parseInt(pill.getAttribute('data-phase'), 10);
+        pill.classList.remove('active', 'passed');
+        if (pNum === appState.currentPhase) pill.classList.add('active');
+        else if (pNum < appState.currentPhase) pill.classList.add('passed');
+      });
+
+      if (meta && meta.narratives && meta.narratives[currentLang]) {
+        narrativeText.textContent = meta.narratives[currentLang][appState.currentPhase];
+      } else {
+        narrativeText.textContent = t.normalFormNarrative;
+      }
+
+      if (currentLang === 'zh') {
+        stepCounterLabel.textContent = `第 ${appState.currentStepIndex} 步 (微阶段 ${appState.currentPhase}/5)`;
+      } else {
+        stepCounterLabel.textContent = `Step ${appState.currentStepIndex} (Phase ${appState.currentPhase}/5)`;
+      }
+
+      if (!meta) {
+        syntaxStatus.className = 'status-badge status-active';
+        syntaxStatus.textContent = t.statusNormal;
+      } else {
+        syntaxStatus.className = 'status-badge status-active';
+        syntaxStatus.textContent = t.statusRedex;
+      }
+
+      const highlights = {
+        redexId: (meta && appState.currentPhase <= 3) ? meta.redexId : null,
+        targetVarIds: (meta && appState.currentPhase >= 2 && appState.currentPhase <= 4) ? meta.targetVarIds : [],
+        argId: (meta && appState.currentPhase >= 2 && appState.currentPhase <= 4) ? meta.argId : null
+      };
+
+      const namedAst = dbToNamedAST(term);
+      codeNamedContainer.innerHTML = renderNamedHtml(namedAst, 0, highlights);
+      codeDeBruijnContainer.innerHTML = renderDeBruijnHtml(term, 0, highlights);
+
+      codeNamedContainer.querySelectorAll('.highlight-redex').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = parseInt(el.getAttribute('data-node-id'), 10);
+          triggerSpecificRedex(id);
+        });
+      });
+
+      historyBadgeCount.textContent = t.historyBadgeSteps(appState.stepHistory.length);
+      if (stepHistoryTableBody) {
+        stepHistoryTableBody.innerHTML = '';
+        appState.stepHistory.forEach((h, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = (idx === appState.currentStepIndex) ? 'active' : '';
+          const ruleLabel = idx === 0
+            ? t.histRuleInit
+            : (idx === appState.stepHistory.length - 1 && !appState.currentReductionMeta ? t.histRuleNormal : t.histRuleBeta);
+          const termStr = termToPlainString(h.term);
+
+          tr.innerHTML = `
+            <td style="text-align: center; color: var(--text-dim);">${idx}</td>
+            <td style="font-weight: 500;">${ruleLabel}</td>
+            <td class="col-term" title="${termStr}">${termStr}</td>
+          `;
+
+          tr.addEventListener('click', () => {
+            pausePlayback();
+            appState.currentStepIndex = idx;
+            appState.currentTerm = appState.stepHistory[idx].term;
+            appState.currentPhase = 1;
+            appState.currentReductionMeta = prepareReductionStep(appState.currentTerm, appState.reductionStrategy);
+            syncFullUI();
+          });
+          stepHistoryTableBody.appendChild(tr);
+        });
+
+        const activeRow = stepHistoryTableBody.querySelector('tr.active');
+        if (activeRow) activeRow.scrollIntoView({ block: 'nearest' });
+      }
+
+      if (appState.activeViewTab === 'svg') {
+        svgCanvasContainer.style.display = 'block';
+        monoViewContainer.style.display = 'none';
+        renderTrompDiagram(term, {
+          alt: isAlt,
+          showLabels: appState.showLabels,
+          phase: appState.currentPhase,
+          reductionMeta: meta
+        });
+      } else if (appState.activeViewTab === 'boxchar') {
+        svgCanvasContainer.style.display = 'none';
+        monoViewContainer.style.display = 'flex';
+        monoTitleLabel.textContent = t.boxCharTitle;
+        monoDiagramDisplay.textContent = generateBoxChar(term, isAlt);
+      } else if (appState.activeViewTab === 'ascii') {
+        svgCanvasContainer.style.display = 'none';
+        monoViewContainer.style.display = 'flex';
+        monoTitleLabel.textContent = t.asciiTitle;
+        monoDiagramDisplay.textContent = generateAsciiGrid(term, isAlt);
+      }
+    }
+    /**
+     * =========================================================================
+     * SECTION 8: Viewport Controls (Pan & Zoom)
+     * =========================================================================
+     */
+    const svgArea = document.getElementById('svgCanvasContainer');
+
+    svgArea.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.floating-viewport-ctrls') || e.target.closest('.diag-redex-bridge')) return;
+      draggingPan = true;
+      panAnchor = { x: e.clientX - panZoom.x, y: e.clientY - panZoom.y };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!draggingPan) return;
+      panZoom.x = e.clientX - panAnchor.x;
+      panZoom.y = e.clientY - panAnchor.y;
+      updateSceneTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      draggingPan = false;
+    });
+
+    svgArea.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+      const newScale = Math.max(0.15, Math.min(6.0, panZoom.scale * zoomFactor));
+
+      const rect = svgArea.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panZoom.x = mouseX - (mouseX - panZoom.x) * (newScale / panZoom.scale);
+      panZoom.y = mouseY - (mouseY - panZoom.y) * (newScale / panZoom.scale);
+      panZoom.scale = newScale;
+      updateSceneTransform();
+    }, { passive: false });
+
+    document.getElementById('ctrlZoomIn').addEventListener('click', () => {
+      panZoom.scale = Math.min(6.0, panZoom.scale * 1.25);
+      updateSceneTransform();
+    });
+
+    document.getElementById('ctrlZoomOut').addEventListener('click', () => {
+      panZoom.scale = Math.max(0.15, panZoom.scale * 0.8);
+      updateSceneTransform();
+    });
+
+    document.getElementById('ctrlResetZoom').addEventListener('click', () => {
+      panZoom = { x: 60, y: 50, scale: 1.0 };
+      updateSceneTransform();
+    });
+
+    document.getElementById('ctrlFitDiagram').addEventListener('click', () => {
+      const svg = document.getElementById('primarySvgDiagram');
+      const scene = document.getElementById('diagramSceneGroup');
+      const bbox = scene.getBBox();
+      if (!bbox || bbox.width === 0 || bbox.height === 0) return;
+
+      const containerW = svg.clientWidth || 800;
+      const containerH = svg.clientHeight || 600;
+      const pad = 60;
+
+      const scaleX = (containerW - pad * 2) / bbox.width;
+      const scaleY = (containerH - pad * 2) / bbox.height;
+      const fitScale = Math.max(0.2, Math.min(2.5, Math.min(scaleX, scaleY)));
+
+      panZoom.scale = fitScale;
+      panZoom.x = pad - bbox.x * fitScale + (containerW - pad * 2 - bbox.width * fitScale) / 2;
+      panZoom.y = pad - bbox.y * fitScale + (containerH - pad * 2 - bbox.height * fitScale) / 2;
+      updateSceneTransform();
+    });
+
+    /**
+     * =========================================================================
+     * SECTION 9: Export Handlers
+     * =========================================================================
+     */
+    document.getElementById('exportSvgAction').addEventListener('click', () => {
+      const svg = document.getElementById('primarySvgDiagram');
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svg);
+
+      if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tromp_diagram_${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('exportPngAction').addEventListener('click', () => {
+      const svg = document.getElementById('primarySvgDiagram');
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = 2;
+        canvas.width = (svg.clientWidth || 1000) * scale;
+        canvas.height = (svg.clientHeight || 700) * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = appState.theme === 'dark' ? '#000000' : '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `tromp_diagram_${Date.now()}.png`;
+        a.click();
+      };
+      img.src = url;
+    });
+
+    document.getElementById('copyMonoTextBtn').addEventListener('click', () => {
+      const txt = monoDiagramDisplay.textContent;
+      navigator.clipboard.writeText(txt).then(() => {
+        const btn = document.getElementById('copyMonoTextBtn');
+        const orig = btn.textContent;
+        btn.textContent = I18N[currentLang].copiedToast;
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    });
+
+    document.getElementById('copyNamedTermBtn').addEventListener('click', () => {
+      const txt = codeNamedContainer.textContent;
+      navigator.clipboard.writeText(txt).then(() => {
+        const btn = document.getElementById('copyNamedTermBtn');
+        const orig = btn.textContent;
+        btn.textContent = I18N[currentLang].copiedToast;
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    });
+
+    /**
+     * =========================================================================
+     * SECTION 10: Event Bindings & Initializer
+     * =========================================================================
+     */
+    loadParseBtn.addEventListener('click', () => loadAndParse(exprInput.value));
+
+    exprInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        loadAndParse(exprInput.value);
+      }
+    });
+
+    openPresetsModalBtn.addEventListener('click', () => {
+      presetsModal.style.display = 'flex';
+      renderPresetsTable();
+      const input = document.getElementById('presetSearchInput');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    });
+
+    const presetSearchInput = document.getElementById('presetSearchInput');
+    if (presetSearchInput) {
+      presetSearchInput.addEventListener('input', (e) => {
+        currentPresetFilter.search = e.target.value;
+        renderPresetsTable();
+      });
+    }
+
+    document.querySelectorAll('.preset-cat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.preset-cat-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentPresetFilter.category = tab.getAttribute('data-category');
+        renderPresetsTable();
+      });
+    });
+
+    document.querySelectorAll('.segmented-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.segmented-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        appState.inputMode = btn.getAttribute('data-input-mode');
+        const t = I18N[currentLang];
+        exprInput.placeholder = appState.inputMode === 'debruijn' ? t.placeholderDeBruijn : t.placeholderClassic;
+      });
+    });
+
+    document.querySelectorAll('.phase-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        appState.currentPhase = parseInt(pill.getAttribute('data-phase'), 10);
+        syncFullUI();
+      });
+    });
+
+    document.getElementById('microNextBtn').addEventListener('click', advanceMicroPhase);
+    document.getElementById('microPrevBtn').addEventListener('click', rewindMicroPhase);
+    document.getElementById('macroNextBtn').addEventListener('click', advanceMacroStep);
+    document.getElementById('macroPrevBtn').addEventListener('click', rewindMacroStep);
+    document.getElementById('macroResetBtn').addEventListener('click', resetToInitial);
+    document.getElementById('playPauseBtn').addEventListener('click', togglePlayback);
+    document.getElementById('reduceNormalFormBtn').addEventListener('click', reduceToNormalForm);
+
+    animSpeedSlider.addEventListener('input', (e) => {
+      appState.playSpeed = parseInt(e.target.value, 10);
+      speedValueLabel.textContent = `${appState.playSpeed}ms`;
+    });
+
+    strategyDropdown.addEventListener('change', (e) => {
+      appState.reductionStrategy = e.target.value;
+      appState.currentReductionMeta = prepareReductionStep(appState.currentTerm, appState.reductionStrategy);
+      syncFullUI();
+    });
+
+    diagramStyleSelect.addEventListener('change', (e) => {
+      appState.diagramStyle = e.target.value;
+      syncFullUI();
+    });
+
+    if (toggleDiagramLabels) {
+      toggleDiagramLabels.addEventListener('change', (e) => {
+        appState.showLabels = e.target.checked;
+        syncFullUI();
+      });
+    }
+
+    if (toggleSmoothAnim) {
+      toggleSmoothAnim.addEventListener('change', (e) => {
+        appState.smoothAnimation = e.target.checked;
+      });
+    }
+
+    document.getElementById('langToggleBtn').addEventListener('click', toggleLanguage);
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+
+    document.querySelectorAll('.view-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        appState.activeViewTab = tab.getAttribute('data-tab');
+        syncFullUI();
+      });
+    });
+
+    document.querySelectorAll('.symbol-key').forEach(key => {
+      key.addEventListener('click', () => {
+        const sym = key.getAttribute('data-sym');
+        const start = exprInput.selectionStart;
+        const end = exprInput.selectionEnd;
+        exprInput.value = exprInput.value.slice(0, start) + sym + exprInput.value.slice(end);
+        exprInput.focus();
+        exprInput.selectionStart = exprInput.selectionEnd = start + sym.length;
+      });
+    });
+
+    document.getElementById('guideModalBtn').addEventListener('click', () => {
+      document.getElementById('visualGuideModal').style.display = 'flex';
+    });
+    document.getElementById('aboutModalBtn').addEventListener('click', () => {
+      document.getElementById('aboutTrompModal').style.display = 'flex';
+    });
+    document.querySelectorAll('.close-modal-btn, .modal-backdrop').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target === el || el.classList.contains('close-modal-btn')) {
+          document.querySelectorAll('.modal-backdrop').forEach(m => m.style.display = 'none');
+        }
+      });
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.style.display = 'none');
+        return;
+      }
+      if (document.activeElement === exprInput || document.activeElement === document.getElementById('presetSearchInput')) return;
+      if (e.key === ' ') {
+        e.preventDefault();
+        togglePlayback();
+      } else if (e.key === 'ArrowRight') {
+        if (e.shiftKey) advanceMicroPhase();
+        else advanceMacroStep();
+      } else if (e.key === 'ArrowLeft') {
+        if (e.shiftKey) rewindMicroPhase();
+        else rewindMacroStep();
+      } else if (e.key === 'r' || e.key === 'R') {
+        resetToInitial();
+      } else if (e.key === 'f' || e.key === 'F') {
+        document.getElementById('ctrlFitDiagram').click();
+      }
+    });
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', () => {
+      updateLanguageUI();
+      const defaultPreset = PRESET_DEFINITIONS.find(p => p.id === 'TWO');
+      if (defaultPreset) {
+        exprInput.value = defaultPreset.code;
+        loadAndParse(defaultPreset.code);
+      }
+      updateSceneTransform();
+    });
+  </script>
+</body>
+</html>
